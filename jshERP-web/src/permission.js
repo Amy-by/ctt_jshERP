@@ -46,7 +46,11 @@ router.beforeEach((to, from, next) => {
           store.dispatch('UpdateAppRouter',  { constRoutes }).then(() => {
             // 根据roles权限生成可访问的路由表
             // 动态添加可访问路由表
-            router.addRoutes(store.getters.addRouters)
+            // 替换已弃用的router.addRoutes()方法
+            const addRouters = store.getters.addRouters;
+            addRouters.forEach(route => {
+              router.addRoute(route);
+            });
             // 直接跳转到首页，确保登录成功后能正常访问
             next({ path: '/dashboard/analysis' })
           }).catch(() => {

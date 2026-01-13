@@ -15,7 +15,7 @@
       },
       content: {
         type: Number,
-        default: ''
+        default: 0
       },
       bordered: {
         type: Boolean,

@@ -152,11 +152,9 @@ public class PlatformConfigService {
     }
 
     public PlatformConfig getInfoByKey(String platformKey)throws Exception {
-        PlatformConfig platformConfig = new PlatformConfig();
+        PlatformConfig platformConfig = null;
         try{
-            if(platformKey.contains("aliOss") || platformKey.contains("weixin")) {
-                platformConfig = null;
-            } else {
+            if(!platformKey.contains("aliOss") && !platformKey.contains("weixin")) {
                 PlatformConfigExample example = new PlatformConfigExample();
                 example.createCriteria().andPlatformKeyEqualTo(platformKey);
                 List<PlatformConfig> list=platformConfigMapper.selectByExample(example);

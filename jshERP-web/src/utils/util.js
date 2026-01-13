@@ -83,17 +83,8 @@ export function formatDate(value, fmt) {
 // 生成首页路由
 export function generateIndexRouter(data) {
   let indexRouter = generateChildRouters(data)
-  indexRouter.splice(0,0, {
-    path: '/',
-    name: '首页',
-    component: () => import('@/components/layouts/TabLayout'),
-    meta: {
-      title: '首页',
-      icon: 'icon-present',
-      url: '/dashboard/analysis'
-    },
-    redirect: '/dashboard/analysis'
-  })
+  // 移除重复的首页路由，避免与constantRouterMap中的路由冲突
+  // 只保留动态生成的子路由
   return indexRouter;
 }
 

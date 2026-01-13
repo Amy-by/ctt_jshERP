@@ -214,14 +214,23 @@
       initInfo () {
         getBuyAndSaleStatistics().then((res)=>{
           if(res.code === 200){
-            this.statistics = res.data;
+            // 将所有统计数据转换为数字类型，避免类型错误
+            const statistics = res.data;
+            for (const key in statistics) {
+              if (Object.prototype.hasOwnProperty.call(statistics, key)) {
+                const value = statistics[key];
+                // 如果值为空字符串或null，转换为0
+                statistics[key] = value === '' || value === null ? 0 : Number(value);
+              }
+            }
+            this.statistics = statistics;
           }
         })
         buyOrSalePrice().then(res=>{
-          if(res.code === 200){
-            this.buyPriceData = res.data.buyPriceList
-            this.salePriceData = res.data.salePriceList
-            this.retailPriceData = res.data.retailPriceList
+          if(res && res.code === 200 && res.data){
+            this.buyPriceData = Array.isArray(res.data.buyPriceList) ? res.data.buyPriceList : []
+            this.salePriceData = Array.isArray(res.data.salePriceList) ? res.data.salePriceList : []
+            this.retailPriceData = Array.isArray(res.data.retailPriceList) ? res.data.retailPriceList : []
           }
         })
         getPlatformConfigByKey({"platformKey": "pay_fee_url"}).then((res)=> {
