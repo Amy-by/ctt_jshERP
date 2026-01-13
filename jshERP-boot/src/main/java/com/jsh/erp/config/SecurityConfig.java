@@ -24,33 +24,14 @@ public class SecurityConfig implements WebMvcConfigurer {
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        
-        // 允许的来源（根据实际情况修改）
-        config.addAllowedOrigin("http://localhost:3000");
-        config.addAllowedOrigin("http://localhost:3002");
-        config.addAllowedOrigin("http://192.168.1.7:3000");
-        config.addAllowedOrigin("http://192.168.1.7:3002");
-        
-        // 允许的HTTP方法
-        config.addAllowedMethod("GET");
-        config.addAllowedMethod("POST");
-        config.addAllowedMethod("PUT");
-        config.addAllowedMethod("DELETE");
-        config.addAllowedMethod("OPTIONS");
-        
-        // 允许的头部
+        // 允许所有来源
+        config.addAllowedOrigin("*");
+        // 允许所有方法
+        config.addAllowedMethod("*");
+        // 允许所有头部
         config.addAllowedHeader("*");
-        
         // 允许携带凭证
         config.setAllowCredentials(true);
-        
-        // 暴露的头部
-        config.addExposedHeader("Authorization");
-        config.addExposedHeader("X-Total-Count");
-        config.addExposedHeader("X-Requested-With");
-        
-        // 预检请求的缓存时间（秒）
-        config.setMaxAge(3600L);
         
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);

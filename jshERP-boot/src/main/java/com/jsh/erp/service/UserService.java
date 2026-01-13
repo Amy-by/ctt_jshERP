@@ -71,18 +71,6 @@ public class UserService {
             Long userId = this.getUserId(request);
             if(userId!=null) {
                 result = userMapper.selectByPrimaryKey(id);
-                //解密敏感字段
-                if (result != null) {
-                    if (result.getEmail() != null && !result.getEmail().isEmpty()) {
-                        result.setEmail(AesUtil.decrypt(result.getEmail()));
-                    }
-                    if (result.getPhonenum() != null && !result.getPhonenum().isEmpty()) {
-                        result.setPhonenum(AesUtil.decrypt(result.getPhonenum()));
-                    }
-                    if (result.getWeixinOpenId() != null && !result.getWeixinOpenId().isEmpty()) {
-                        result.setWeixinOpenId(AesUtil.decrypt(result.getWeixinOpenId()));
-                    }
-                }
             }
         }catch(Exception e){
             JshException.readFail(logger, e);
@@ -97,18 +85,6 @@ public class UserService {
             UserExample example = new UserExample();
             example.createCriteria().andIdIn(idList);
             list = userMapper.selectByExample(example);
-            //解密敏感字段
-            for (User user : list) {
-                if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                    user.setEmail(AesUtil.decrypt(user.getEmail()));
-                }
-                if (user.getPhonenum() != null && !user.getPhonenum().isEmpty()) {
-                    user.setPhonenum(AesUtil.decrypt(user.getPhonenum()));
-                }
-                if (user.getWeixinOpenId() != null && !user.getWeixinOpenId().isEmpty()) {
-                    user.setWeixinOpenId(AesUtil.decrypt(user.getWeixinOpenId()));
-                }
-            }
         }catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -124,18 +100,6 @@ public class UserService {
                 UserExample example = new UserExample();
                 example.createCriteria().andStatusEqualTo(BusinessConstants.USER_STATUS_NORMAL).andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
                 list = userMapper.selectByExample(example);
-                //解密敏感字段
-                for (User user : list) {
-                    if (user.getEmail() != null && !user.getEmail().isEmpty()) {
-                        user.setEmail(AesUtil.decrypt(user.getEmail()));
-                    }
-                    if (user.getPhonenum() != null && !user.getPhonenum().isEmpty()) {
-                        user.setPhonenum(AesUtil.decrypt(user.getPhonenum()));
-                    }
-                    if (user.getWeixinOpenId() != null && !user.getWeixinOpenId().isEmpty()) {
-                        user.setWeixinOpenId(AesUtil.decrypt(user.getWeixinOpenId()));
-                    }
-                }
             }
         }catch(Exception e){
             JshException.readFail(logger, e);
