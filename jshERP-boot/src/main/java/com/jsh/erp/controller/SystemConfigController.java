@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.multipart.MultipartHttpServletRequest;
 import org.springframework.web.servlet.HandlerMapping;
 
+import com.jsh.erp.service.RedisService;
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import javax.servlet.http.HttpServletRequest;
@@ -46,6 +47,9 @@ public class SystemConfigController extends BaseController {
 
     @Resource
     private SystemConfigService systemConfigService;
+    
+    @Resource
+    private RedisService redisService;
 
     @Value(value="${file.uploadType}")
     private Long fileUploadType;
@@ -228,6 +232,13 @@ public class SystemConfigController extends BaseController {
     @GetMapping(value = "/static/**")
     @ApiOperation(value = "预览图片&下载文件")
     public void view(HttpServletRequest request, HttpServletResponse response) {
+        // 权限检查
+        Object userId = redisService.getObjectFromSessionByKey(request, "userId");
+        if (userId == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        
         // ISO-8859-1 ==> UTF-8 进行编码转换
         String imgPath = extractPathFromPattern(request);
         if(StringUtil.isEmpty(imgPath) || imgPath=="null"){
@@ -293,6 +304,13 @@ public class SystemConfigController extends BaseController {
     @GetMapping(value = "/static/mini/**")
     @ApiOperation(value = "预览缩略图&下载文件")
     public void viewMini(HttpServletRequest request, HttpServletResponse response) {
+        // 权限检查
+        Object userId = redisService.getObjectFromSessionByKey(request, "userId");
+        if (userId == null) {
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
+        
         // ISO-8859-1 ==> UTF-8 进行编码转换
         String imgPath = extractPathFromPattern(request);
         if(StringUtil.isEmpty(imgPath) || imgPath=="null"){

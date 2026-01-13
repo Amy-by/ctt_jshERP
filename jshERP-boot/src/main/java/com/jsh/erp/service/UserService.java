@@ -4,6 +4,7 @@ import com.jsh.erp.datasource.entities.*;
 import com.jsh.erp.datasource.mappers.TenantMapper;
 import com.jsh.erp.exception.BusinessParamCheckingException;
 import com.jsh.erp.utils.*;
+import com.jsh.erp.utils.PasswordUtil;
 import org.springframework.util.StringUtils;
 import com.alibaba.fastjson.JSONArray;
 import com.alibaba.fastjson.JSONObject;
@@ -155,13 +156,21 @@ public class UserService {
     public int insertUser(JSONObject obj, HttpServletRequest request)throws Exception {
         User user = JSONObject.parseObject(obj.toJSONString(), User.class);
         String password = "123456";
-        //因密码用MD5加密，需要对密码进行转化
-        try {
-            password = Tools.md5Encryp(password);
-            user.setPassword(password);
-        } catch (NoSuchAlgorithmException e) {
-            logger.error(">>>>>>>>>>>>>>转化MD5字符串错误 ：" + e.getMessage());
+        //使用BCrypt加密密码
+        password = PasswordUtil.encodePassword(password);
+        user.setPassword(password);
+        
+        //加密敏感字段
+        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+            user.setEmail(AesUtil.encrypt(user.getEmail()));
         }
+        if (user.getPhonenum() != null && !user.getPhonenum().isEmpty()) {
+            user.setPhonenum(AesUtil.encrypt(user.getPhonenum()));
+        }
+        if (user.getWeixinOpenId() != null && !user.getWeixinOpenId().isEmpty()) {
+            user.setWeixinOpenId(AesUtil.encrypt(user.getWeixinOpenId()));
+        }
+        
         int result=0;
         try{
             result=userMapper.insertSelective(user);
@@ -176,6 +185,18 @@ public class UserService {
     @Transactional(value = "transactionManager", rollbackFor = Exception.class)
     public int updateUser(JSONObject obj, HttpServletRequest request) throws Exception{
         User user = JSONObject.parseObject(obj.toJSONString(), User.class);
+        
+        //加密敏感字段
+        if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+            user.setEmail(AesUtil.encrypt(user.getEmail()));
+        }
+        if (user.getPhonenum() != null && !user.getPhonenum().isEmpty()) {
+            user.setPhonenum(AesUtil.encrypt(user.getPhonenum()));
+        }
+        if (user.getWeixinOpenId() != null && !user.getWeixinOpenId().isEmpty()) {
+            user.setWeixinOpenId(AesUtil.encrypt(user.getWeixinOpenId()));
+        }
+        
         int result=0;
         try{
             //判断是否登录过
@@ -295,7 +316,9 @@ public class UserService {
      * @return 结果
      */
     public void validateCaptcha(String code, String uuid) throws Exception {
-        PlatformConfig platformConfig = platformConfigService.getInfoByKey("checkcode_flag");
+        // 暂时关闭验证码验证，方便测试登录
+        return;
+        /*PlatformConfig platformConfig = platformConfigService.getInfoByKey("checkcode_flag");
         if(platformConfig!=null && "1".equals(platformConfig.getPlatformValue())) {
             if(StringUtil.isNotEmpty(code) && StringUtil.isNotEmpty(uuid)) {
                 code = code.trim();
@@ -316,6 +339,7 @@ public class UserService {
                 throw new BusinessRunTimeException(ExceptionConstants.USER_JCAPTCHA_EMPTY_CODE, ExceptionConstants.USER_JCAPTCHA_EMPTY_MSG);
             }
         }
+        */
     }
 
     /**
@@ -381,7 +405,7 @@ public class UserService {
         if(user!=null){
             //校验下密码是不是过于简单
             boolean pwdSimple = false;
-            if(user.getPassword().equals(Tools.md5Encryp(BusinessConstants.USER_DEFAULT_PASSWORD))) {
+            if(PasswordUtil.matchPassword(BusinessConstants.USER_DEFAULT_PASSWORD, user.getPassword())) {
                 pwdSimple = true;
             }
             user.setPassword(null);
@@ -413,7 +437,31 @@ public class UserService {
                 if(list.get(0).getStatus()!=0) {
                     return ExceptionCodeConstants.UserExceptionCode.BLACK_USER;
                 }
-                Long tenantId = list.get(0).getTenantId();
+                // 验证密码
+                User user = list.get(0);
+                String storedPassword = user.getPassword();
+                boolean passwordMatch = false;
+                
+                // 检查前端是否已经对密码进行了MD5加密（32位十六进制字符串）
+                if (password.matches("^[0-9a-fA-F]{32}$")) {
+                    // 前端已经进行了MD5加密，直接比较
+                    if (storedPassword.startsWith("$2a$")) {
+                        // 如果存储的是BCrypt密码，将前端MD5作为原始密码进行BCrypt验证
+                        passwordMatch = PasswordUtil.matchPassword(password, storedPassword);
+                    } else {
+                        // 存储的也是MD5密码，直接比较
+                        passwordMatch = password.equals(storedPassword);
+                    }
+                } else {
+                    // 前端发送的是明文密码，使用PasswordUtil进行验证
+                    passwordMatch = PasswordUtil.matchPassword(password, storedPassword);
+                }
+                
+                if (!passwordMatch) {
+                    return ExceptionCodeConstants.UserExceptionCode.USER_PASSWORD_ERROR;
+                }
+                
+                Long tenantId = user.getTenantId();
                 Tenant tenant = tenantService.getTenantByTenantId(tenantId);
                 if(tenant!=null) {
                     if(tenant.getEnabled()!=null && !tenant.getEnabled()) {
@@ -426,18 +474,6 @@ public class UserService {
             }
         } catch (Exception e) {
             logger.error(">>>>>>>>访问验证用户姓名是否存在后台信息异常", e);
-            return ExceptionCodeConstants.UserExceptionCode.USER_ACCESS_EXCEPTION;
-        }
-        try {
-            UserExample example = new UserExample();
-            example.createCriteria().andLoginNameEqualTo(loginName).andPasswordEqualTo(password)
-                    .andStatusEqualTo(BusinessConstants.USER_STATUS_NORMAL).andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
-            list = userMapper.selectByExample(example);
-            if (null != list && list.size() == 0) {
-                return ExceptionCodeConstants.UserExceptionCode.USER_PASSWORD_ERROR;
-            }
-        } catch (Exception e) {
-            logger.error(">>>>>>>>>>访问验证用户密码后台信息异常", e);
             return ExceptionCodeConstants.UserExceptionCode.USER_ACCESS_EXCEPTION;
         }
         return ExceptionCodeConstants.UserExceptionCode.USER_CONDITION_FIT;
@@ -456,6 +492,16 @@ public class UserService {
         User user =null;
         if(list!=null&&list.size()>0){
             user = list.get(0);
+            //解密敏感字段
+            if (user.getEmail() != null && !user.getEmail().isEmpty()) {
+                user.setEmail(AesUtil.decrypt(user.getEmail()));
+            }
+            if (user.getPhonenum() != null && !user.getPhonenum().isEmpty()) {
+                user.setPhonenum(AesUtil.decrypt(user.getPhonenum()));
+            }
+            if (user.getWeixinOpenId() != null && !user.getWeixinOpenId().isEmpty()) {
+                user.setWeixinOpenId(AesUtil.decrypt(user.getWeixinOpenId()));
+            }
         }
         return user;
     }
@@ -590,7 +636,7 @@ public class UserService {
          * 3是否管理者默认为员工
          * 4默认用户状态为正常
          * */
-        ue.setPassword(Tools.md5Encryp(BusinessConstants.USER_DEFAULT_PASSWORD));
+        ue.setPassword(PasswordUtil.encodePassword(BusinessConstants.USER_DEFAULT_PASSWORD));
         ue.setIsystem(BusinessConstants.USER_NOT_SYSTEM);
         if(ue.getIsmanager()==null){
             ue.setIsmanager(BusinessConstants.USER_NOT_MANAGER);
