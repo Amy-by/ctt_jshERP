@@ -39,4 +39,24 @@ public class PasswordUtil {
             }
         }
     }
+    
+    /**
+     * 验证密码复杂度
+     * 要求：至少8位，包含大小写字母、数字和特殊字符
+     * @param password 密码
+     * @return 是否符合复杂度要求
+     */
+    public static boolean checkPasswordComplexity(String password) {
+        if (password == null || password.length() < 8) {
+            return false;
+        }
+        
+        // 检查是否包含大小写字母、数字和特殊字符
+        boolean hasUpper = !password.equals(password.toLowerCase());
+        boolean hasLower = !password.equals(password.toUpperCase());
+        boolean hasDigit = password.matches(".*\\d.*");
+        boolean hasSpecial = password.matches(".*[!@#$%^&*(),.?\\\\:{}|<>].*");
+        
+        return hasUpper && hasLower && hasDigit && hasSpecial;
+    }
 }

@@ -45,12 +45,13 @@ module.exports = {
         }
     },
     devServer: {
-        port: 3000,
+        port: 3003,
         proxy: {
             '/jshERP-boot': {
-                target: 'http://localhost:9999', // 请求本地 需要jshERP-boot后台项目
+                target: 'https://localhost:8443', // 请求本地 需要jshERP-boot后台项目
                 ws: false,
-                changeOrigin: true
+                changeOrigin: true,
+                secure: false
             }
         }
     },

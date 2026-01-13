@@ -253,10 +253,20 @@ public class UserController extends BaseController {
             Long userId = jsonObject.getLong("userId");
             String oldpwd = jsonObject.getString("oldpassword");
             String password = jsonObject.getString("password");
+            
+            // 验证密码复杂度
+            if (!PasswordUtil.checkPasswordComplexity(password)) {
+                flag = 4; // 密码复杂度不符合要求
+                info = "密码复杂度不符合要求，至少8位，包含大小写字母、数字和特殊字符";
+                objectMap.put("status", flag);
+                return returnJson(objectMap, info, ErpInfo.ERROR.code);
+            }
+            
             User user = userService.getUser(userId);
             //必须和原始密码一致才可以更新密码
-            if (oldpwd.equalsIgnoreCase(user.getPassword())) {
-                user.setPassword(password);
+            if (PasswordUtil.matchPassword(oldpwd, user.getPassword())) {
+                // 使用BCrypt加密密码
+                user.setPassword(PasswordUtil.encodePassword(password));
                 flag = userService.updateUserByObj(user, request); //1-成功
                 info = "修改成功";
             } else {

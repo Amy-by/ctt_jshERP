@@ -434,11 +434,22 @@ public class UserService {
             if (null != list && list.size() == 0) {
                 return ExceptionCodeConstants.UserExceptionCode.USER_NOT_EXIST;
             } else if(list.size() ==1) {
+                User user = list.get(0);
+                
                 if(list.get(0).getStatus()!=0) {
                     return ExceptionCodeConstants.UserExceptionCode.BLACK_USER;
                 }
+                
+                // 检查登录失败次数和锁定状态
+                String loginFailKey = "login_fail:" + loginName;
+                String loginLockKey = "login_lock:" + loginName;
+                
+                // 检查是否被锁定
+                if (redisService.getCacheObject(loginLockKey) != null) {
+                    return ExceptionCodeConstants.UserExceptionCode.BLACK_USER;
+                }
+                
                 // 验证密码
-                User user = list.get(0);
                 String storedPassword = user.getPassword();
                 boolean passwordMatch = false;
                 
@@ -458,8 +469,28 @@ public class UserService {
                 }
                 
                 if (!passwordMatch) {
+                    // 密码错误，增加失败次数
+                    Integer failCount = redisService.getCacheObject(loginFailKey);
+                    if (failCount == null) {
+                        failCount = 0;
+                    }
+                    failCount++;
+                    
+                    if (failCount >= BusinessConstants.LOGIN_FAILURE_LIMIT) {
+                        // 达到失败次数限制，锁定账号
+                        redisService.storageKeyWithTime(loginLockKey, "locked", Long.valueOf(BusinessConstants.LOGIN_FAILURE_LOCK_TIME * 60));
+                        redisService.deleteObject(loginFailKey);
+                    } else {
+                        // 未达到限制，更新失败次数
+                        redisService.storageKeyWithTime(loginFailKey, failCount.toString(), Long.valueOf(BusinessConstants.LOGIN_FAILURE_LOCK_TIME * 60));
+                    }
+                    
                     return ExceptionCodeConstants.UserExceptionCode.USER_PASSWORD_ERROR;
                 }
+                
+                // 密码正确，重置失败次数
+                redisService.deleteObject(loginFailKey);
+                redisService.deleteObject(loginLockKey);
                 
                 Long tenantId = user.getTenantId();
                 Tenant tenant = tenantService.getTenantByTenantId(tenantId);

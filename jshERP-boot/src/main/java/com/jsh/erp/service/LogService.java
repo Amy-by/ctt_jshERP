@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.jsh.erp.constants.BusinessConstants;
 import com.jsh.erp.datasource.entities.Log;
 import com.jsh.erp.datasource.entities.LogExample;
+import com.jsh.erp.datasource.entities.User;
 import com.jsh.erp.datasource.mappers.LogMapper;
 import com.jsh.erp.datasource.mappers.LogMapperEx;
 import com.jsh.erp.datasource.vo.LogVo4List;
@@ -147,8 +148,59 @@ public class LogService {
                     Byte status = 0;
                     log.setStatus(status);
                     log.setContent(content);
+                    
+                    // 获取用户的tenantId
+                    User user = userService.getCurrentUser();
+                    if(user != null) {
+                        log.setTenantId(user.getTenantId());
+                    }
+                    
                     logMapper.insertSelective(log);
                 }
+            }
+        }catch(Exception e){
+            JshException.writeFail(logger, e);
+        }
+    }
+    
+    /**
+     * 记录关键业务操作审计日志
+     * @param moduleName 模块名称
+     * @param operationType 操作类型
+     * @param businessId 业务ID
+     * @param content 操作内容
+     * @param request HTTP请求
+     * @throws Exception
+     */
+    public void insertAuditLog(String moduleName, String operationType, Long businessId, String content, HttpServletRequest request)throws Exception{
+        try{
+            Long userId = userService.getUserId(request);
+            if(userId!=null) {
+                Log log = new Log();
+                log.setUserId(userId);
+                log.setOperation(moduleName + ":" + operationType);
+                log.setClientIp(getLocalIp(request));
+                log.setCreateTime(new Date());
+                Byte status = 0;
+                log.setStatus(status);
+                
+                // 构建详细的审计内容
+                JSONObject auditContent = new JSONObject();
+                auditContent.put("businessId", businessId);
+                auditContent.put("content", content);
+                auditContent.put("requestUrl", request.getRequestURL().toString());
+                auditContent.put("requestMethod", request.getMethod());
+                auditContent.put("userAgent", request.getHeader("User-Agent"));
+                
+                log.setContent(auditContent.toJSONString());
+                
+                // 获取用户的tenantId
+                User user = userService.getCurrentUser();
+                if(user != null) {
+                    log.setTenantId(user.getTenantId());
+                }
+                
+                logMapper.insertSelective(log);
             }
         }catch(Exception e){
             JshException.writeFail(logger, e);

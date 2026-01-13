@@ -17,28 +17,55 @@ public class GlobalExceptionHandler {
     @ResponseBody
     public Object handleException(Exception e, HttpServletRequest request) {
         JSONObject status = new JSONObject();
-
+        
+        // 获取请求详细信息
+        String requestUrl = request.getRequestURL().toString();
+        String method = request.getMethod();
+        String queryString = request.getQueryString();
+        String clientIp = request.getRemoteAddr();
+        
+        // 记录请求参数
+        JSONObject requestInfo = new JSONObject();
+        requestInfo.put("url", requestUrl);
+        requestInfo.put("method", method);
+        requestInfo.put("queryString", queryString);
+        requestInfo.put("clientIp", clientIp);
+        
         // 针对业务参数异常的处理
         if (e instanceof BusinessParamCheckingException) {
-            status.put(ExceptionConstants.GLOBAL_RETURNS_CODE, ((BusinessParamCheckingException) e).getCode());
-            status.put(ExceptionConstants.GLOBAL_RETURNS_DATA, ((BusinessParamCheckingException) e).getData());
+            BusinessParamCheckingException be = (BusinessParamCheckingException) e;
+            status.put(ExceptionConstants.GLOBAL_RETURNS_CODE, be.getCode());
+            status.put(ExceptionConstants.GLOBAL_RETURNS_DATA, be.getData());
+            
+            // 记录业务参数异常日志
+            log.error("Business Param Exception Occured => requestInfo: {}, code: {}, message: {}", 
+                    requestInfo, be.getCode(), be.getMessage(), e);
             return status;
         }
 
         //针对业务运行时异常的处理
         if (e instanceof BusinessRunTimeException) {
-            status.put(ExceptionConstants.GLOBAL_RETURNS_CODE, ((BusinessRunTimeException) e).getCode());
-            status.put(ExceptionConstants.GLOBAL_RETURNS_DATA, ((BusinessRunTimeException) e).getData());
+            BusinessRunTimeException be = (BusinessRunTimeException) e;
+            status.put(ExceptionConstants.GLOBAL_RETURNS_CODE, be.getCode());
+            status.put(ExceptionConstants.GLOBAL_RETURNS_DATA, be.getData());
+            
+            // 记录业务运行时异常日志
+            log.error("Business Runtime Exception Occured => requestInfo: {}, code: {}, message: {}", 
+                    requestInfo, be.getCode(), be.getMessage(), e);
             return status;
         }
 
         status.put(ExceptionConstants.GLOBAL_RETURNS_CODE, ExceptionConstants.SERVICE_SYSTEM_ERROR_CODE);
         status.put(ExceptionConstants.GLOBAL_RETURNS_DATA, ExceptionConstants.SERVICE_SYSTEM_ERROR_MSG);
-        log.error("Global Exception Occured => url : {}, msg : {}", request.getRequestURL(), e.getMessage());
-        /**
-         * 这里输出完整的堆栈信息，否则有些异常完全不知道哪里出错了。
-         */
-        log.error("Global Exception Occured => url : {}", request.getRequestURL(), e);
+        
+        // 记录系统异常详细日志
+        log.error("Global System Exception Occured => requestInfo: {}, message: {}", 
+                requestInfo, e.getMessage());
+        log.error("Global System Exception Occured => requestInfo: {}", requestInfo, e);
+        
+        // 这里可以添加异常告警机制，例如发送邮件、短信等
+        // TODO: 实现异常告警机制
+        
         return status;
     }
 }

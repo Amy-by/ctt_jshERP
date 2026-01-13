@@ -203,9 +203,19 @@ public class BusinessConstants {
     public static final String DELETE_TYPE_FORCE = "2";
 
     /**
-     * 默认管理员账号
+     * 默认管理员登录名
      */
     public static final String DEFAULT_MANAGER = "admin";
+    
+    /**
+     * 密码策略相关常量
+     */
+    // 登录失败次数限制
+    public static final Integer LOGIN_FAILURE_LIMIT = 5;
+    // 登录失败锁定时间（分钟）
+    public static final Integer LOGIN_FAILURE_LOCK_TIME = 30;
+    // 密码过期时间（天）
+    public static final Integer PASSWORD_EXPIRE_DAYS = 90;
 
     public static final String ROLE_TYPE_PRIVATE = "个人数据";
 

@@ -1,6 +1,7 @@
 <configuration>
     <property name="LOG_FILE" value="${logs.home}/jshERP"/>
     <property name="LOG_PATTERN" value="%d{yyyy/MM/dd-HH:mm:ss} %-5level [%thread] %logger - %msg%n"/>
+    <property name="LOG_ARCHIVE" value="${logs.home}/archive"/>
 
     <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
         <encoder>
@@ -15,10 +16,27 @@
         </encoder>
         <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
             <fileNamePattern>${LOG_FILE}.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
-            <maxHistory>10</maxHistory>
-            <totalSizeCap>1GB</totalSizeCap>
+            <maxHistory>30</maxHistory> <!-- 保留30天的历史记录 -->
+            <totalSizeCap>5GB</totalSizeCap> <!-- 总大小限制为5GB -->
+            <cleanHistoryOnStart>true</cleanHistoryOnStart> <!-- 启动时清理过期日志 -->
             <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
-                <maxFileSize>100MB</maxFileSize>
+                <maxFileSize>100MB</maxFileSize> <!-- 单个文件大小限制为100MB -->
+            </timeBasedFileNamingAndTriggeringPolicy>
+        </rollingPolicy>
+    </appender>
+
+    <!-- 敏感操作日志单独记录 -->
+    <appender name="SECURITY_FILE" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_FILE}_security.log</file>
+        <encoder>
+            <pattern>${LOG_PATTERN}</pattern>
+        </encoder>
+        <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+            <fileNamePattern>${LOG_FILE}_security.%d{yyyy-MM-dd}.%i.log</fileNamePattern>
+            <maxHistory>90</maxHistory> <!-- 安全日志保留90天 -->
+            <totalSizeCap>10GB</totalSizeCap>
+            <timeBasedFileNamingAndTriggeringPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedFNATP">
+                <maxFileSize>500MB</maxFileSize>
             </timeBasedFileNamingAndTriggeringPolicy>
         </rollingPolicy>
     </appender>
@@ -27,8 +45,21 @@
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="TIME_FILE"/>
     </root>
+    
+    <!-- 业务日志 -->
     <logger name="com.jsh" additivity="false" level="DEBUG">
         <appender-ref ref="CONSOLE"/>
         <appender-ref ref="TIME_FILE"/>
+    </logger>
+    
+    <!-- 安全相关日志 -->
+    <logger name="com.jsh.erp.controller.UserController" additivity="false" level="INFO">
+        <appender-ref ref="SECURITY_FILE"/>
+    </logger>
+    <logger name="com.jsh.erp.service.UserService" additivity="false" level="INFO">
+        <appender-ref ref="SECURITY_FILE"/>
+    </logger>
+    <logger name="com.jsh.erp.service.LogService" additivity="false" level="INFO">
+        <appender-ref ref="SECURITY_FILE"/>
     </logger>
 </configuration>
