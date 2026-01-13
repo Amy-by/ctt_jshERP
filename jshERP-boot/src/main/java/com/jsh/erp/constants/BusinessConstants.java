@@ -177,6 +177,29 @@ public class BusinessConstants {
     public static final byte USER_STATUS_NORMAL = 0;
     public static final byte USER_STATUS_BANNED = 2;
     /**
+     * 密码策略配置
+     * */
+    // 密码最小长度
+    public static final int PASSWORD_MIN_LENGTH = 8;
+    // 密码是否需要包含大写字母
+    public static final boolean PASSWORD_REQUIRE_UPPERCASE = true;
+    // 密码是否需要包含小写字母
+    public static final boolean PASSWORD_REQUIRE_LOWERCASE = true;
+    // 密码是否需要包含数字
+    public static final boolean PASSWORD_REQUIRE_DIGIT = true;
+    // 密码是否需要包含特殊字符
+    public static final boolean PASSWORD_REQUIRE_SPECIAL_CHAR = true;
+    // 允许的特殊字符
+    public static final String PASSWORD_ALLOWED_SPECIAL_CHARS = "!@#$%^&*()_+-=[]{}|;:,.<>?";
+    // 密码有效期（天）
+    public static final int PASSWORD_EXPIRE_DAYS = 90;
+    // 密码过期前提醒天数
+    public static final int PASSWORD_EXPIRE_WARNING_DAYS = 7;
+    // 最大登录失败次数
+    public static final int MAX_LOGIN_FAILED_TIMES = 5;
+    // 登录失败锁定时间（分钟）
+    public static final int LOGIN_LOCK_MINUTES = 30;
+    /**
      * 日志操作
      * 新增、修改、删除、登录、导入
      * */

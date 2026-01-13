@@ -1,0 +1,118 @@
+name: Dependency Update Check
+
+on:
+  # 当Dependabot创建或更新PR时触发
+  pull_request:
+    branches: [ master ]
+    types: [ opened, synchronize, reopened ]
+  # 每周定时运行一次依赖项检查
+  schedule:
+    - cron: '0 0 * * 0' # 每周日0点运行
+
+jobs:
+  # 后端依赖检查和测试
+  backend-dependency-check:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'dependencies') && contains(github.event.pull_request.labels.*.name, 'backend')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+          cache: maven
+
+      - name: Build with Maven
+        working-directory: ./jshERP-boot
+        run: mvn clean install -DskipTests
+
+      - name: Run tests
+        working-directory: ./jshERP-boot
+        run: mvn test
+
+      - name: Run OWASP Dependency Check
+        working-directory: ./jshERP-boot
+        run: mvn dependency-check:check
+
+  # 前端依赖检查和测试
+  frontend-dependency-check:
+    runs-on: ubuntu-latest
+    if: contains(github.event.pull_request.labels.*.name, 'dependencies') && contains(github.event.pull_request.labels.*.name, 'frontend')
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+          cache: npm
+
+      - name: Install dependencies
+        working-directory: ./jshERP-web
+        run: npm install --legacy-peer-deps
+
+      - name: Run npm audit
+        working-directory: ./jshERP-web
+        run: npm audit
+
+      - name: Build project
+        working-directory: ./jshERP-web
+        run: npm run build
+
+  # 每周依赖项报告
+  weekly-dependency-report:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'schedule'
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Set up JDK 8
+        uses: actions/setup-java@v3
+        with:
+          java-version: '8'
+          distribution: 'adopt'
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '14'
+
+      # 后端依赖报告
+      - name: Run backend dependency check
+        working-directory: ./jshERP-boot
+        run: mvn dependency-check:check
+
+      # 前端依赖报告
+      - name: Install frontend dependencies
+        working-directory: ./jshERP-web
+        run: npm install --legacy-peer-deps
+
+      - name: Run frontend dependency check
+        working-directory: ./jshERP-web
+        run: npm audit --json > npm-audit.json
+
+      - name: Upload reports
+        uses: actions/upload-artifact@v3
+        with:
+          name: dependency-reports
+          path: |
+            ./jshERP-boot/target/dependency-check-report.html
+            ./jshERP-web/npm-audit.json
+
+      - name: Send notification
+        if: failure()
+        uses: actions/github-script@v6
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '[Security Alert] Weekly dependency check failed',
+              body: '依赖项检查发现安全问题，请查看报告。',
+              labels: ['security', 'dependencies']
+            })

@@ -234,8 +234,8 @@ public class UserController extends BaseController {
         Map<String, Object> objectMap = new HashMap<>();
         Long id = jsonObject.getLong("id");
         String password = "123456";
-        String md5Pwd = Tools.md5Encryp(password);
-        int update = userService.resetPwd(md5Pwd, id, request);
+        String bcryptPwd = PasswordUtil.encodePassword(password);
+        int update = userService.resetPwd(bcryptPwd, id, request);
         if(update > 0) {
             return returnJson(objectMap, SUCCESS, ErpInfo.OK.code);
         } else {
@@ -255,8 +255,8 @@ public class UserController extends BaseController {
             String password = jsonObject.getString("password");
             User user = userService.getUser(userId);
             //必须和原始密码一致才可以更新密码
-            if (oldpwd.equalsIgnoreCase(user.getPassword())) {
-                user.setPassword(password);
+            if (PasswordUtil.matchPassword(oldpwd, user.getPassword())) {
+                user.setPassword(PasswordUtil.encodePassword(password));
                 flag = userService.updateUserByObj(user, request); //1-成功
                 info = "修改成功";
             } else {
