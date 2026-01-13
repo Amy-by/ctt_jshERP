@@ -20,23 +20,38 @@ router.beforeEach((to, from, next) => {
     } else {
       if (store.getters.permissionList.length === 0) {
         store.dispatch('GetPermissionList').then(res => {
-          const menuData = res;
-          if (menuData === null || menuData === "" || menuData === undefined) {
-            return;
-          }
+          let menuData = res;
           // 缓存用户的按钮权限
           store.dispatch('GetUserBtnList').then(res => {
-            Vue.ls.set('winBtnStrList', res.data.userBtn, 7 * 24 * 60 * 60 * 1000)
+            if (res && res.data) {
+              Vue.ls.set('winBtnStrList', res.data.userBtn, 7 * 24 * 60 * 60 * 1000)
+            }
+          }).catch(() => {
+            // 忽略按钮权限获取失败
           })
           let constRoutes = [];
-          constRoutes = generateIndexRouter(menuData);
+          try {
+            if (menuData && menuData.length > 0) {
+              constRoutes = generateIndexRouter(menuData);
+            } else {
+              // 如果menuData为空，使用默认路由配置，确保能访问首页
+              constRoutes = [];
+            }
+          } catch (e) {
+            console.error('生成路由失败:', e);
+            // 如果路由生成失败，使用默认路由
+            constRoutes = [];
+          }
           // 添加主界面路由
           store.dispatch('UpdateAppRouter',  { constRoutes }).then(() => {
             // 根据roles权限生成可访问的路由表
             // 动态添加可访问路由表
             router.addRoutes(store.getters.addRouters)
-            const redirect = decodeURIComponent(from.query.redirect || to.path)
-            next({ path: redirect })
+            // 直接跳转到首页，确保登录成功后能正常访问
+            next({ path: '/dashboard/analysis' })
+          }).catch(() => {
+            // 如果更新路由失败，直接跳转到首页
+            next({ path: '/dashboard/analysis' })
           })
         })
         .catch(() => {
