@@ -79,12 +79,12 @@ public class DepotHeadService {
     @Resource
     private LogService logService;
 
-    public DepotHead getDepotHead(long id)throws Exception {
+    public DepotHead getDepotHead(long id) {
         DepotHead result=null;
         try{
             result=depotHeadMapper.selectByPrimaryKey(id);
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("获取单据信息失败，ID: {}", id, e);
         }
         return result;
     }

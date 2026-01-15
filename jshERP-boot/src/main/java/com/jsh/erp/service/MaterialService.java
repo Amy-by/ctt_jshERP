@@ -260,6 +260,20 @@ public class MaterialService {
     @Transactional(value = "transactionManager", rollbackFor = Exception.class)
     public int batchDeleteMaterialByIds(String ids) throws Exception{
         String [] idArray=ids.split(",");
+        
+        // 检查是否有有效的ID
+        boolean hasValidId = false;
+        for (String id : idArray) {
+            if (StringUtil.isNotEmpty(id)) {
+                hasValidId = true;
+                break;
+            }
+        }
+        
+        if (!hasValidId) {
+            return 0;
+        }
+        
         //校验单据子表	jsh_depot_item
         List<DepotItem> depotItemList =null;
         try{
@@ -327,6 +341,12 @@ public class MaterialService {
                 new StringBuffer(BusinessConstants.LOG_OPERATION_TYPE_EDIT).append(ids).toString(),
                 ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest());
         List<Long> materialIds = StringUtil.strToLongList(ids);
+        
+        // 检查是否有有效的ID
+        if (materialIds == null || materialIds.isEmpty()) {
+            return 0;
+        }
+        
         Material material = new Material();
         material.setEnabled(status);
         MaterialExample example = new MaterialExample();

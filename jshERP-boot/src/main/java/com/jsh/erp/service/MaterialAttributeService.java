@@ -34,10 +34,12 @@ public class MaterialAttributeService {
     @Resource
     private MaterialAttributeMapperEx materialAttributeMapperEx;
 
-    public MaterialAttribute getMaterialAttribute(long id)throws Exception {
+    public MaterialAttribute getMaterialAttribute(Long id)throws Exception {
         MaterialAttribute result=null;
         try{
-            result=materialAttributeMapper.selectByPrimaryKey(id);
+            if (id != null && id > 0) {
+                result=materialAttributeMapper.selectByPrimaryKey(id);
+            }
         }catch(Exception e){
             JshException.readFail(logger, e);
         }

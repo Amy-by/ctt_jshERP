@@ -34,12 +34,12 @@ public class MaterialPropertyService {
     @Resource
     private LogService logService;
 
-    public MaterialProperty getMaterialProperty(long id)throws Exception {
+    public MaterialProperty getMaterialProperty(long id) {
         MaterialProperty result=null;
         try{
             result=materialPropertyMapper.selectByPrimaryKey(id);
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("获取物料特性信息失败，ID: {}", id, e);
         }
         return result;
     }

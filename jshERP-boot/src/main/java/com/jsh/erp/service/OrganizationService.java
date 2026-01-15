@@ -42,7 +42,13 @@ public class OrganizationService {
     private LogService logService;
 
     public Organization getOrganization(long id) throws Exception {
-        return organizationMapper.selectByPrimaryKey(id);
+        Organization result = null;
+        try {
+            result = organizationMapper.selectByPrimaryKey(id);
+        } catch (Exception e) {
+            logger.error("获取机构信息失败，ID: {}", id, e);
+        }
+        return result;
     }
 
     public List<Organization> getOrganizationListByIds(String ids)throws Exception {

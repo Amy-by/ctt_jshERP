@@ -41,17 +41,19 @@ public class RoleService {
     //超管的专用角色
     private static Long MANAGE_ROLE_ID = 4L;
 
-    public Role getRole(long id)throws Exception {
+    public Role getRole(Long id) {
         Role result=null;
         try{
-            result=roleMapper.selectByPrimaryKey(id);
+            if (id != null && id > 0) {
+                result=roleMapper.selectByPrimaryKey(id);
+            }
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("获取角色信息失败: {}", e.getMessage(), e);
         }
         return result;
     }
 
-    public List<Role> getRoleListByIds(String ids)throws Exception {
+    public List<Role> getRoleListByIds(String ids) {
         List<Long> idList = StringUtil.strToLongList(ids);
         List<Role> list = new ArrayList<>();
         try{
@@ -59,26 +61,26 @@ public class RoleService {
             example.createCriteria().andIdIn(idList);
             list = roleMapper.selectByExample(example);
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("根据ID列表获取角色信息失败: {}", e.getMessage(), e);
         }
         return list;
     }
 
-    public List<Role> allList()throws Exception {
+    public List<Role> allList() {
         RoleExample example = new RoleExample();
         example.createCriteria().andEnabledEqualTo(true).andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
         example.setOrderByClause("sort asc, id desc");
-        List<Role> list=null;
+        List<Role> list=new ArrayList<>();
         try{
             list=roleMapper.selectByExample(example);
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("获取所有角色列表失败: {}", e.getMessage(), e);
         }
         return list;
     }
 
     public List<Role> tenantRoleList() {
-        List<Role> list=null;
+        List<Role> list=new ArrayList<>();
         try{
             if(BusinessConstants.DEFAULT_MANAGER.equals(userService.getCurrentUser().getLoginName())) {
                 RoleExample example = new RoleExample();
@@ -88,13 +90,13 @@ public class RoleService {
                 list=roleMapper.selectByExample(example);
             }
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("获取租户角色列表失败: {}", e.getMessage(), e);
         }
         return list;
     }
 
-    public List<RoleEx> select(String name, String description)throws Exception {
-        List<RoleEx> list=null;
+    public List<RoleEx> select(String name, String description) {
+        List<RoleEx> list=new ArrayList<>();
         try{
             PageUtils.startPage();
             list=roleMapperEx.selectByConditionRole(name, description);
@@ -112,13 +114,13 @@ public class RoleService {
                 }
             }
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("查询角色列表失败: {}", e.getMessage(), e);
         }
         return list;
     }
 
     @Transactional(value = "transactionManager", rollbackFor = Exception.class)
-    public int insertRole(JSONObject obj, HttpServletRequest request)throws Exception {
+    public int insertRole(JSONObject obj, HttpServletRequest request) {
         Role role = JSONObject.parseObject(obj.toJSONString(), Role.class);
         int result=0;
         try{
@@ -127,13 +129,13 @@ public class RoleService {
             logService.insertLog("角色",
                     new StringBuffer(BusinessConstants.LOG_OPERATION_TYPE_ADD).append(role.getName()).toString(), request);
         }catch(Exception e){
-            JshException.writeFail(logger, e);
+            logger.error("新增角色失败: {}", e.getMessage(), e);
         }
         return result;
     }
 
     @Transactional(value = "transactionManager", rollbackFor = Exception.class)
-    public int updateRole(JSONObject obj, HttpServletRequest request) throws Exception{
+    public int updateRole(JSONObject obj, HttpServletRequest request) {
         Role role = JSONObject.parseObject(obj.toJSONString(), Role.class);
         int result=0;
         try{
@@ -141,42 +143,51 @@ public class RoleService {
             logService.insertLog("角色",
                     new StringBuffer(BusinessConstants.LOG_OPERATION_TYPE_EDIT).append(role.getName()).toString(), request);
         }catch(Exception e){
-            JshException.writeFail(logger, e);
+            logger.error("修改角色失败: {}", e.getMessage(), e);
         }
         return result;
     }
 
     @Transactional(value = "transactionManager", rollbackFor = Exception.class)
-    public int deleteRole(Long id, HttpServletRequest request)throws Exception {
+    public int deleteRole(Long id, HttpServletRequest request) {
         return batchDeleteRoleByIds(id.toString());
     }
 
     @Transactional(value = "transactionManager", rollbackFor = Exception.class)
-    public int batchDeleteRole(String ids, HttpServletRequest request) throws Exception{
+    public int batchDeleteRole(String ids, HttpServletRequest request) {
         return batchDeleteRoleByIds(ids);
     }
 
-    public int checkIsNameExist(Long id, String name) throws Exception{
+    public int checkIsNameExist(Long id, String name) {
         RoleExample example = new RoleExample();
-        example.createCriteria().andIdNotEqualTo(id).andNameEqualTo(name).andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
-        List<Role> list =null;
-        try{
-            list=roleMapper.selectByExample(example);
-        }catch(Exception e){
-            JshException.readFail(logger, e);
+        RoleExample.Criteria criteria = example.createCriteria();
+        
+        // 如果id不为0，添加id不等于条件
+        if (id != null && id != 0) {
+            criteria.andIdNotEqualTo(id);
         }
-        return list==null?0:list.size();
+        
+        criteria.andNameEqualTo(name).andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
+        
+        List<Role> list = null;
+        try {
+            list = roleMapper.selectByExample(example);
+        } catch (Exception e) {
+            logger.error("检查角色名称是否存在失败: {}", e.getMessage(), e);
+        }
+        
+        return list == null ? 0 : list.size();
     }
 
-    public List<Role> findUserRole()throws Exception{
+    public List<Role> findUserRole() {
         RoleExample example = new RoleExample();
         example.setOrderByClause("Id");
         example.createCriteria().andEnabledEqualTo(true).andDeleteFlagNotEqualTo(BusinessConstants.DELETE_FLAG_DELETED);
-        List<Role> list=null;
+        List<Role> list=new ArrayList<>();
         try{
             list=roleMapper.selectByExample(example);
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("查询用户角色失败: {}", e.getMessage(), e);
         }
         return list;
     }
@@ -188,24 +199,24 @@ public class RoleService {
      * @return int
      */
     @Transactional(value = "transactionManager", rollbackFor = Exception.class)
-    public int batchDeleteRoleByIds(String ids) throws Exception{
+    public int batchDeleteRoleByIds(String ids) {
         StringBuffer sb = new StringBuffer();
         sb.append(BusinessConstants.LOG_OPERATION_TYPE_DELETE);
         List<Role> list = getRoleListByIds(ids);
         for(Role role: list){
             sb.append("[").append(role.getName()).append("]");
         }
-        logService.insertLog("角色", sb.toString(),
-                ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest());
-        User userInfo=userService.getCurrentUser();
-        String [] idArray=ids.split(",");
-        int result=0;
-        try{
-            result=roleMapperEx.batchDeleteRoleByIds(new Date(),userInfo==null?null:userInfo.getId(),idArray);
-        }catch(Exception e){
-            JshException.writeFail(logger, e);
+        try {
+            logService.insertLog("角色", sb.toString(),
+                    ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest());
+            User userInfo=userService.getCurrentUser();
+            String [] idArray=ids.split(",");
+            int result=roleMapperEx.batchDeleteRoleByIds(new Date(),userInfo==null?null:userInfo.getId(),idArray);
+            return result;
+        } catch (Exception e) {
+            logger.error("批量删除角色失败: {}", e.getMessage(), e);
+            return 0;
         }
-        return result;
     }
 
     public Role getRoleWithoutTenant(Long roleId) {
@@ -213,22 +224,22 @@ public class RoleService {
     }
 
     @Transactional(value = "transactionManager", rollbackFor = Exception.class)
-    public int batchSetStatus(Boolean status, String ids)throws Exception {
-        logService.insertLog("角色",
-                new StringBuffer(BusinessConstants.LOG_OPERATION_TYPE_ENABLED).toString(),
-                ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest());
-        List<Long> roleIds = StringUtil.strToLongList(ids);
-        Role role = new Role();
-        role.setEnabled(status);
-        RoleExample example = new RoleExample();
-        example.createCriteria().andIdIn(roleIds);
-        int result=0;
-        try{
-            result = roleMapper.updateByExampleSelective(role, example);
-        }catch(Exception e){
-            JshException.writeFail(logger, e);
+    public int batchSetStatus(Boolean status, String ids) {
+        try {
+            logService.insertLog("角色",
+                    new StringBuffer(BusinessConstants.LOG_OPERATION_TYPE_ENABLED).toString(),
+                    ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest());
+            List<Long> roleIds = StringUtil.strToLongList(ids);
+            Role role = new Role();
+            role.setEnabled(status);
+            RoleExample example = new RoleExample();
+            example.createCriteria().andIdIn(roleIds);
+            int result = roleMapper.updateByExampleSelective(role, example);
+            return result;
+        } catch (Exception e) {
+            logger.error("批量设置角色状态失败: {}", e.getMessage(), e);
+            return 0;
         }
-        return result;
     }
 
     /**
@@ -237,7 +248,7 @@ public class RoleService {
      * @param type
      * @return
      */
-    public Object parseHomePriceByLimit(BigDecimal price, String type, String priceLimit, String emptyInfo, HttpServletRequest request) throws Exception {
+    public Object parseHomePriceByLimit(BigDecimal price, String type, String priceLimit, String emptyInfo, HttpServletRequest request) {
         if(StringUtil.isNotEmpty(priceLimit)) {
             if("buy".equals(type) && priceLimit.contains("1")) {
                 return emptyInfo;
@@ -261,7 +272,7 @@ public class RoleService {
      * @return
      * @throws Exception
      */
-    public BigDecimal parseBillPriceByLimit(BigDecimal price, String billCategory, String priceLimit, HttpServletRequest request) throws Exception {
+    public BigDecimal parseBillPriceByLimit(BigDecimal price, String billCategory, String priceLimit, HttpServletRequest request) {
         if(StringUtil.isNotEmpty(priceLimit)) {
             if("buy".equals(billCategory) && priceLimit.contains("4")) {
                 return BigDecimal.ZERO;
@@ -282,25 +293,34 @@ public class RoleService {
      * @param type
      * @return
      */
-    public Object parseMaterialPriceByLimit(BigDecimal price, String type, String emptyInfo, HttpServletRequest request) throws Exception {
-        Long userId = userService.getUserId(request);
-        String priceLimit = userService.getRoleTypeByUserId(userId).getPriceLimit();
-        if(StringUtil.isNotEmpty(priceLimit)) {
-            if("buy".equals(type) && priceLimit.contains("4")) {
-                return emptyInfo;
+    public Object parseMaterialPriceByLimit(BigDecimal price, String type, String emptyInfo, HttpServletRequest request) {
+        try {
+            Long userId = userService.getUserId(request);
+            String priceLimit = userService.getRoleTypeByUserId(userId).getPriceLimit();
+            if(StringUtil.isNotEmpty(priceLimit)) {
+                if("buy".equals(type) && priceLimit.contains("4")) {
+                    return emptyInfo;
+                }
+                if("retail".equals(type) && priceLimit.contains("5")) {
+                    return emptyInfo;
+                }
+                if("sale".equals(type) && priceLimit.contains("6")) {
+                    return emptyInfo;
+                }
             }
-            if("retail".equals(type) && priceLimit.contains("5")) {
-                return emptyInfo;
-            }
-            if("sale".equals(type) && priceLimit.contains("6")) {
-                return emptyInfo;
-            }
+        } catch (Exception e) {
+            logger.error("解析物料价格失败: {}", e.getMessage(), e);
         }
         return price;
     }
 
-    public String getCurrentPriceLimit(HttpServletRequest request) throws Exception {
-        Long userId = userService.getUserId(request);
-        return userService.getRoleTypeByUserId(userId).getPriceLimit();
+    public String getCurrentPriceLimit(HttpServletRequest request) {
+        try {
+            Long userId = userService.getUserId(request);
+            return userService.getRoleTypeByUserId(userId).getPriceLimit();
+        } catch (Exception e) {
+            logger.error("获取当前价格限制失败: {}", e.getMessage(), e);
+            return "";
+        }
     }
 }
