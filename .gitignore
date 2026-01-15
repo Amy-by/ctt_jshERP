@@ -3,6 +3,8 @@ cookies.txt
 *.log
 logs/
 *.p12
+# 但保留images文件夹用于存放文档截图
+!images/
 
 # IDE生成的文件
 .idea/
