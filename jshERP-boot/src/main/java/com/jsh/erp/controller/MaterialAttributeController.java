@@ -40,13 +40,24 @@ public class MaterialAttributeController extends BaseController {
     @ApiOperation(value = "根据id获取信息")
     public String getList(@RequestParam("id") Long id,
                           HttpServletRequest request) throws Exception {
-        MaterialAttribute materialAttribute = materialAttributeService.getMaterialAttribute(id);
+        if (id == null || id <= 0) {
+            Map<String, Object> objectMap = new HashMap<>();
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        MaterialAttribute materialAttribute = null;
+        try {
+            materialAttribute = materialAttributeService.getMaterialAttribute(id);
+        } catch (Exception e) {
+            logger.error("获取物料属性信息失败: {}", e.getMessage());
+            Map<String, Object> objectMap = new HashMap<>();
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
         Map<String, Object> objectMap = new HashMap<>();
         if(materialAttribute != null) {
             objectMap.put("info", materialAttribute);
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
         }
     }
 
@@ -141,6 +152,9 @@ public class MaterialAttributeController extends BaseController {
     public JSONArray getValueListById(@RequestParam("id") Long id,
                                      HttpServletRequest request)throws Exception {
         JSONArray dataArray = new JSONArray();
+        if (id == null || id <= 0) {
+            return dataArray;
+        }
         try {
             dataArray = materialAttributeService.getValueArrById(id);
         } catch(Exception e){

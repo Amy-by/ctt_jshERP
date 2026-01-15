@@ -71,13 +71,21 @@ public class MaterialController extends BaseController {
     @ApiOperation(value = "根据id获取信息")
     public String getList(@RequestParam("id") Long id,
                           HttpServletRequest request) throws Exception {
-        Material material = materialService.getMaterial(id);
         Map<String, Object> objectMap = new HashMap<>();
+        
+        // 参数验证
+        if (id == null || id <= 0) {
+            objectMap.put("message", "无效的物料ID");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
+        Material material = materialService.getMaterial(id);
         if(material != null) {
             objectMap.put("info", material);
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
+            objectMap.put("message", "物料不存在");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
         }
     }
 
@@ -136,6 +144,13 @@ public class MaterialController extends BaseController {
     @ApiOperation(value = "批量删除")
     public String batchDeleteResource(@RequestParam("ids") String ids, HttpServletRequest request)throws Exception {
         Map<String, Object> objectMap = new HashMap<>();
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要删除的物料");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int delete = materialService.batchDeleteMaterial(ids, request);
         return returnStr(objectMap, delete);
     }
@@ -205,11 +220,18 @@ public class MaterialController extends BaseController {
         Boolean status = jsonObject.getBoolean("status");
         String ids = jsonObject.getString("ids");
         Map<String, Object> objectMap = new HashMap<>();
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要操作的物料");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int res = materialService.batchSetStatus(status, ids);
         if(res > 0) {
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
+            return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         }
     }
 
@@ -224,6 +246,13 @@ public class MaterialController extends BaseController {
     public BaseResponseInfo findById(@RequestParam("id") Long id, HttpServletRequest request) throws Exception{
         BaseResponseInfo res = new BaseResponseInfo();
         try {
+            // 参数验证
+            if (id == null || id <= 0) {
+                res.code = 400;
+                res.data = "无效的物料ID";
+                return res;
+            }
+            
             List<MaterialVo4Unit> list = materialService.findById(id);
             res.code = 200;
             res.data = list;
@@ -248,6 +277,13 @@ public class MaterialController extends BaseController {
                                                 HttpServletRequest request) throws Exception{
         BaseResponseInfo res = new BaseResponseInfo();
         try {
+            // 参数验证
+            if (meId == null || meId <= 0) {
+                res.code = 400;
+                res.data = "无效的物料ID";
+                return res;
+            }
+            
             String[] mpArr = mpList.split(",");
             MaterialVo4Unit mu = new MaterialVo4Unit();
             List<MaterialVo4Unit> list = materialService.findByIdWithBarCode(meId);
@@ -414,6 +450,11 @@ public class MaterialController extends BaseController {
                                         HttpServletRequest request) throws Exception{
         JSONObject item = new JSONObject();
         try {
+            // 参数验证
+            if (meId == null || meId <= 0) {
+                return item;
+            }
+            
             String[] mpArr = mpList.split(",");
             List<MaterialVo4Unit> materialList = materialService.getMaterialByMeId(meId);
             if(materialList!=null && materialList.size()!=1) {
@@ -722,6 +763,14 @@ public class MaterialController extends BaseController {
         BaseResponseInfo res = new BaseResponseInfo();
         Map<String, Object> map = new HashMap<>();
         try {
+            // 参数验证
+            if (currentPage == null || currentPage <= 0) {
+                currentPage = 1;
+            }
+            if (pageSize == null || pageSize <= 0 || pageSize > 1000) {
+                pageSize = 10;
+            }
+            
             List<Long> idList = new ArrayList<>();
             List<Long> depotList = new ArrayList<>();
             if(categoryId != null){
@@ -774,6 +823,13 @@ public class MaterialController extends BaseController {
                                  HttpServletRequest request)throws Exception {
         String ids = jsonObject.getString("ids");
         Map<String, Object> objectMap = new HashMap<>();
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要操作的物料");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         List<Depot> depotList = depotService.getAllList();
         if(depotList.isEmpty()) {
             return returnJson(objectMap, "请先创建仓库后再操作", ErpInfo.WARING_MSG.code);
@@ -782,7 +838,7 @@ public class MaterialController extends BaseController {
         if(res > 0) {
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
+            return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         }
     }
 
@@ -799,11 +855,18 @@ public class MaterialController extends BaseController {
                                                HttpServletRequest request)throws Exception {
         String ids = jsonObject.getString("ids");
         Map<String, Object> objectMap = new HashMap<>();
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要操作的物料");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int res = materialService.batchSetMaterialCurrentUnitPrice(ids);
         if(res > 0) {
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
+            return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         }
     }
 
@@ -819,11 +882,19 @@ public class MaterialController extends BaseController {
     public String batchUpdate(@RequestBody JSONObject jsonObject,
                               HttpServletRequest request)throws Exception {
         Map<String, Object> objectMap = new HashMap<>();
+        String ids = jsonObject.getString("ids");
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要操作的物料");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int res = materialService.batchUpdate(jsonObject);
         if(res > 0) {
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
+            return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         }
     }
 
@@ -837,6 +908,14 @@ public class MaterialController extends BaseController {
         BaseResponseInfo res = new BaseResponseInfo();
         try {
             String name = jsonObject.getString("name");
+            
+            // 参数验证
+            if (StringUtil.isEmpty(name)) {
+                res.code = 400;
+                res.data = "名称不能为空";
+                return res;
+            }
+            
             res.code = 200;
             res.data = PinYinUtil.getFirstLettersLo(name);
         } catch(Exception e){

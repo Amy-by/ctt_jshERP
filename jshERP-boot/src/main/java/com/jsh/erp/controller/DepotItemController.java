@@ -96,6 +96,13 @@ public class DepotItemController {
             @RequestParam("materialId") Long mId,
             HttpServletRequest request)throws Exception {
         Map<String, Object> objectMap = new HashMap<>();
+        
+        // 参数验证
+        if (mId == null || mId <= 0) {
+            objectMap.put("message", "无效的商品ID");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         if(StringUtil.isNotEmpty(beginTime)) {
             beginTime = beginTime + BusinessConstants.DAY_FIRST_TIME;
         }
@@ -199,12 +206,23 @@ public class DepotItemController {
                               HttpServletRequest request)throws Exception {
         BaseResponseInfo res = new BaseResponseInfo();
         try {
+            // 参数验证
+            if (headerId == null || headerId < 0) {
+                res.code = 400;
+                res.data = "无效的单据ID";
+                return res;
+            }
+            
             Long userId = userService.getUserId(request);
             String priceLimit = userService.getRoleTypeByUserId(userId).getPriceLimit();
             List<DepotItemVo4WithInfoEx> dataList = new ArrayList<>();
-            String billCategory = depotHeadService.getBillCategory(depotHeadService.getDepotHead(headerId).getSubType());
-            if(headerId != 0) {
-                dataList = depotItemService.getDetailList(headerId);
+            String billCategory = "";
+            if (headerId != 0) {
+                DepotHead depotHead = depotHeadService.getDepotHead(headerId);
+                if (depotHead != null) {
+                    billCategory = depotHeadService.getBillCategory(depotHead.getSubType());
+                    dataList = depotItemService.getDetailList(headerId);
+                }
             }
             JSONObject outer = new JSONObject();
             outer.put("total", dataList.size());

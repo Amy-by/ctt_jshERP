@@ -43,13 +43,24 @@ public class MaterialCategoryController extends BaseController {
     @ApiOperation(value = "根据id获取信息")
     public String getList(@RequestParam("id") Long id,
                           HttpServletRequest request) throws Exception {
-        MaterialCategory materialCategory = materialCategoryService.getMaterialCategory(id);
+        if (id == null || id <= 0) {
+            Map<String, Object> objectMap = new HashMap<>();
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        MaterialCategory materialCategory = null;
+        try {
+            materialCategory = materialCategoryService.getMaterialCategory(id);
+        } catch (Exception e) {
+            logger.error("获取物料分类信息失败: {}", e.getMessage());
+            Map<String, Object> objectMap = new HashMap<>();
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
         Map<String, Object> objectMap = new HashMap<>();
         if(materialCategory != null) {
             objectMap.put("info", materialCategory);
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
         } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
         }
     }
 

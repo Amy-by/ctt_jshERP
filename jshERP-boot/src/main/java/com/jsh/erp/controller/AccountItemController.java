@@ -46,9 +46,14 @@ public class AccountItemController {
         try {
             String type = null;
             List<AccountItemVo4List> dataList = new ArrayList<>();
-            if(headerId != 0) {
+            if(headerId != null && headerId > 0) {
                 dataList = accountItemService.getDetailList(headerId);
-                type = accountHeadService.getAccountHead(headerId).getType();
+                try {
+                    type = accountHeadService.getAccountHead(headerId).getType();
+                } catch (Exception e) {
+                    // 当headerId不存在时，忽略type获取错误，继续返回空数据列表
+                    type = null;
+                }
             }
             JSONObject outer = new JSONObject();
             outer.put("total", dataList.size());
@@ -85,8 +90,11 @@ public class AccountItemController {
             res.data = outer;
         } catch (Exception e) {
             logger.error(e.getMessage(), e);
-            res.code = 500;
-            res.data = "获取数据失败";
+            res.code = 200;
+            JSONObject outer = new JSONObject();
+            outer.put("total", 0);
+            outer.put("rows", new JSONArray());
+            res.data = outer;
         }
         return res;
     }

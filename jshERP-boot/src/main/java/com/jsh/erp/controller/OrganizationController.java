@@ -43,15 +43,41 @@ public class OrganizationController {
 
     @GetMapping(value = "/info")
     @ApiOperation(value = "根据id获取信息")
-    public String getList(@RequestParam("id") Long id,
-                          HttpServletRequest request) throws Exception {
-        Organization organization = organizationService.getOrganization(id);
+    public String getList(@RequestParam("id") String idStr,
+                          HttpServletRequest request) {
         Map<String, Object> objectMap = new HashMap<>();
-        if(organization != null) {
-            objectMap.put("info", organization);
-            return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
-        } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
+        try {
+            // 参数验证
+            if (idStr == null || idStr.isEmpty()) {
+                objectMap.put("message", "无效的机构ID");
+                return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+            }
+            
+            Long id;
+            try {
+                id = Long.parseLong(idStr);
+            } catch (NumberFormatException e) {
+                objectMap.put("message", "无效的机构ID格式");
+                return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+            }
+            
+            if (id <= 0) {
+                objectMap.put("message", "无效的机构ID");
+                return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+            }
+            
+            Organization organization = organizationService.getOrganization(id);
+            if(organization != null) {
+                objectMap.put("info", organization);
+                return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
+            } else {
+                objectMap.put("message", "机构不存在");
+                return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            objectMap.put("message", "获取数据失败");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
         }
     }
 

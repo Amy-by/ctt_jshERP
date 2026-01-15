@@ -63,47 +63,74 @@ public class DepotHeadController extends BaseController {
     @GetMapping(value = "/info")
     @ApiOperation(value = "根据id获取信息")
     public String getList(@RequestParam("id") Long id,
-                          HttpServletRequest request) throws Exception {
-        DepotHead depotHead = depotHeadService.getDepotHead(id);
+                          HttpServletRequest request) {
         Map<String, Object> objectMap = new HashMap<>();
-        if(depotHead != null) {
-            objectMap.put("info", depotHead);
+        
+        try {
+            // 参数验证
+            if (id == null || id <= 0) {
+                objectMap.put("message", "无效的单据ID");
+                return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+            }
+            
+            DepotHead depotHead = depotHeadService.getDepotHead(id);
+            if(depotHead != null) {
+                objectMap.put("info", depotHead);
+                return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
+            } else {
+                objectMap.put("message", "单据不存在");
+                return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+            }
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            objectMap.put("message", "获取数据失败");
+            objectMap.put("info", null);
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
-        } else {
-            return returnJson(objectMap, ErpInfo.ERROR.name, ErpInfo.ERROR.code);
         }
     }
 
     @GetMapping(value = "/list")
     @ApiOperation(value = "获取信息列表")
     public TableDataInfo getList(@RequestParam(value = Constants.SEARCH, required = false) String search,
-                                 HttpServletRequest request)throws Exception {
-        String type = StringUtil.getInfo(search, "type");
-        String subType = StringUtil.getInfo(search, "subType");
-        String hasDebt = StringUtil.getInfo(search, "hasDebt");
-        String status = StringUtil.getInfo(search, "status");
-        String purchaseStatus = StringUtil.getInfo(search, "purchaseStatus");
-        String number = StringUtil.getInfo(search, "number");
-        String linkApply = StringUtil.getInfo(search, "linkApply");
-        String linkNumber = StringUtil.getInfo(search, "linkNumber");
-        String beginTime = StringUtil.getInfo(search, "beginTime");
-        String endTime = StringUtil.getInfo(search, "endTime");
-        String materialParam = StringUtil.getInfo(search, "materialParam");
-        Long organId = StringUtil.parseStrLong(StringUtil.getInfo(search, "organId"));
-        Long creator = StringUtil.parseStrLong(StringUtil.getInfo(search, "creator"));
-        Long depotId = StringUtil.parseStrLong(StringUtil.getInfo(search, "depotId"));
-        Long accountId = StringUtil.parseStrLong(StringUtil.getInfo(search, "accountId"));
-        String salesMan = StringUtil.getInfo(search, "salesMan");
-        String remark = StringUtil.getInfo(search, "remark");
-        List<DepotHeadVo4List> list = depotHeadService.select(type, subType, hasDebt, status, purchaseStatus, number, linkApply, linkNumber,
-                beginTime, endTime, materialParam, organId, creator, depotId, accountId, salesMan, remark);
-        return getDataTable(list);
+                                 HttpServletRequest request) {
+        try {
+            String type = StringUtil.getInfo(search, "type");
+            String subType = StringUtil.getInfo(search, "subType");
+            String hasDebt = StringUtil.getInfo(search, "hasDebt");
+            String status = StringUtil.getInfo(search, "status");
+            String purchaseStatus = StringUtil.getInfo(search, "purchaseStatus");
+            String number = StringUtil.getInfo(search, "number");
+            String linkApply = StringUtil.getInfo(search, "linkApply");
+            String linkNumber = StringUtil.getInfo(search, "linkNumber");
+            String beginTime = StringUtil.getInfo(search, "beginTime");
+            String endTime = StringUtil.getInfo(search, "endTime");
+            String materialParam = StringUtil.getInfo(search, "materialParam");
+            Long organId = StringUtil.parseStrLong(StringUtil.getInfo(search, "organId"));
+            Long creator = StringUtil.parseStrLong(StringUtil.getInfo(search, "creator"));
+            Long depotId = StringUtil.parseStrLong(StringUtil.getInfo(search, "depotId"));
+            Long accountId = StringUtil.parseStrLong(StringUtil.getInfo(search, "accountId"));
+            String salesMan = StringUtil.getInfo(search, "salesMan");
+            String remark = StringUtil.getInfo(search, "remark");
+            List<DepotHeadVo4List> list = depotHeadService.select(type, subType, hasDebt, status, purchaseStatus, number, linkApply, linkNumber,
+                    beginTime, endTime, materialParam, organId, creator, depotId, accountId, salesMan, remark);
+            return getDataTable(list);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return getDataTable(new ArrayList<>());
+        }
     }
 
     @DeleteMapping(value = "/delete")
     @ApiOperation(value = "删除")
     public String deleteResource(@RequestParam("id") Long id, HttpServletRequest request)throws Exception {
         Map<String, Object> objectMap = new HashMap<>();
+        
+        // 参数验证
+        if (id == null || id <= 0) {
+            objectMap.put("message", "无效的单据ID");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int delete = depotHeadService.deleteDepotHead(id, request);
         return returnStr(objectMap, delete);
     }
@@ -112,6 +139,13 @@ public class DepotHeadController extends BaseController {
     @ApiOperation(value = "批量删除")
     public String batchDeleteResource(@RequestParam("ids") String ids, HttpServletRequest request)throws Exception {
         Map<String, Object> objectMap = new HashMap<>();
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要删除的单据");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int delete = depotHeadService.batchDeleteDepotHead(ids, request);
         return returnStr(objectMap, delete);
     }
@@ -121,6 +155,13 @@ public class DepotHeadController extends BaseController {
     public String forceCloseBatch(@RequestBody JSONObject jsonObject, HttpServletRequest request)throws Exception {
         Map<String, Object> objectMap = new HashMap<>();
         String ids = jsonObject.getString("ids");
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要强制结单的单据");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int res = depotHeadService.batchForceClose(ids, request);
         if(res > 0) {
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
@@ -134,6 +175,13 @@ public class DepotHeadController extends BaseController {
     public String forceClosePurchaseBatch(@RequestBody JSONObject jsonObject, HttpServletRequest request)throws Exception {
         Map<String, Object> objectMap = new HashMap<>();
         String ids = jsonObject.getString("ids");
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要强制结单的单据");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int res = depotHeadService.batchForceClosePurchase(ids, request);
         if(res > 0) {
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
@@ -155,6 +203,17 @@ public class DepotHeadController extends BaseController {
         Map<String, Object> objectMap = new HashMap<>();
         String status = jsonObject.getString("status");
         String ids = jsonObject.getString("ids");
+        
+        // 参数验证
+        if (StringUtil.isEmpty(ids)) {
+            objectMap.put("message", "请选择要操作的单据");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        if (StringUtil.isEmpty(status)) {
+            objectMap.put("message", "请选择要设置的状态");
+            return returnJson(objectMap, ErpInfo.BAD_REQUEST.name, ErpInfo.BAD_REQUEST.code);
+        }
+        
         int res = depotHeadService.batchSetStatus(status, ids);
         if(res > 0) {
             return returnJson(objectMap, ErpInfo.OK.name, ErpInfo.OK.code);
