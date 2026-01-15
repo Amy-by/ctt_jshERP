@@ -39,8 +39,8 @@ public class LogCostFilter implements Filter {
         HttpServletResponse servletResponse = (HttpServletResponse) response;
         String requestUrl = servletRequest.getRequestURI();
         if(requestUrl.contains("..") || requestUrl.contains("%2e") || requestUrl.contains("%2E")) {
-            servletResponse.setStatus(500);
-            servletResponse.getWriter().write("loginOut");
+            servletResponse.setStatus(400);
+            servletResponse.getWriter().write("无效的请求路径");
             return;
         }
         //具体，比如：处理若用户未登录，则跳转到登录页
@@ -64,7 +64,8 @@ public class LogCostFilter implements Filter {
                 }
             }
         }
-        servletResponse.setStatus(500);
+        // token验证失败，返回401错误而非500错误
+        servletResponse.setStatus(401);
         if(!requestUrl.equals("/jshERP-boot/user/logout") && !requestUrl.equals("/jshERP-boot/function/findMenuByPNumber")) {
             servletResponse.getWriter().write("loginOut");
         }
