@@ -576,12 +576,17 @@ public class UserService {
      * description:
      *  获取当前用户信息
      * create time: 2019/1/24 10:01
-     * @Param:
+     * @Param: 
      * @return com.jsh.erp.datasource.entities.User
      */
     public User getCurrentUser()throws Exception{
         HttpServletRequest request = ((ServletRequestAttributes) Objects.requireNonNull(RequestContextHolder.getRequestAttributes())).getRequest();
-        Long userId = Long.parseLong(redisService.getObjectFromSessionByKey(request,"userId").toString());
+        Object userIdObj = redisService.getObjectFromSessionByKey(request,"userId");
+        if (userIdObj == null) {
+            logger.error("获取当前用户信息失败: userIdObj 为 null");
+            return null;
+        }
+        Long userId = Long.parseLong(userIdObj.toString());
         return getUser(userId);
     }
 

@@ -135,31 +135,59 @@ public class LogService {
             if(userId!=null) {
                 String clientIp = getLocalIp(request);
                 String createTime = Tools.getNow3();
-                Long count = logMapperEx.getCountByIpAndDate(userId, moduleName, clientIp, createTime);
-                if(count > 0) {
-                    //如果某个用户某个IP在同1秒内连续操作两遍，此时需要删除该redis记录，使其退出，防止恶意攻击
-                    redisService.deleteObjectByUserAndIp(userId, clientIp);
-                } else {
-                    Log log = new Log();
-                    log.setUserId(userId);
-                    log.setOperation(moduleName);
-                    log.setClientIp(getLocalIp(request));
-                    log.setCreateTime(new Date());
-                    Byte status = 0;
-                    log.setStatus(status);
-                    log.setContent(content);
-                    
-                    // 获取用户的tenantId
-                    User user = userService.getCurrentUser();
-                    if(user != null) {
-                        log.setTenantId(user.getTenantId());
+                
+                // 记录日志操作，捕获并记录所有异常，但不抛出新异常，避免影响主业务流程
+                try {
+                    Long count = logMapperEx.getCountByIpAndDate(userId, moduleName, clientIp, createTime);
+                    if(count > 0) {
+                        //如果某个用户某个IP在同1秒内连续操作两遍，此时需要删除该redis记录，使其退出，防止恶意攻击
+                        try {
+                            redisService.deleteObjectByUserAndIp(userId, clientIp);
+                            logger.info("删除用户IP的redis记录成功: userId={}, clientIp={}", userId, clientIp);
+                        } catch (Exception e) {
+                            logger.error("删除用户IP的redis记录失败: {}", e.getMessage(), e);
+                            // 忽略该异常，继续执行主业务流程
+                        }
+                    } else {
+                        Log log = new Log();
+                        log.setUserId(userId);
+                        log.setOperation(moduleName);
+                        log.setClientIp(clientIp);
+                        log.setCreateTime(new Date());
+                        Byte status = 0;
+                        log.setStatus(status);
+                        log.setContent(content);
+                        
+                        // 获取用户的tenantId，添加空值检查
+                        Long tenantId = null;
+                        try {
+                            User user = userService.getCurrentUser();
+                            if(user != null) {
+                                tenantId = user.getTenantId();
+                            }
+                        } catch (Exception e) {
+                            // 忽略获取租户ID时的异常，使用null值
+                            logger.error("获取用户租户ID失败: {}", e.getMessage(), e);
+                        }
+                        log.setTenantId(tenantId);
+                        
+                        try {
+                            logMapper.insertSelective(log);
+                            logger.info("插入日志记录成功");
+                        } catch (Exception e) {
+                            logger.error("插入日志记录失败: {}", e.getMessage(), e);
+                            // 忽略该异常，继续执行主业务流程
+                        }
                     }
-                    
-                    logMapper.insertSelective(log);
+                } catch (Exception e) {
+                    logger.error("记录日志过程中发生异常: {}", e.getMessage(), e);
+                    // 忽略该异常，继续执行主业务流程
                 }
             }
         }catch(Exception e){
-            JshException.writeFail(logger, e);
+            logger.error("insertLog方法发生异常: {}", e.getMessage(), e);
+            // 不再抛出异常，避免影响主业务流程
+            // JshException.writeFail(logger, e);
         }
     }
     
@@ -195,7 +223,13 @@ public class LogService {
                 log.setContent(auditContent.toJSONString());
                 
                 // 获取用户的tenantId
-                User user = userService.getCurrentUser();
+                User user = null;
+                try {
+                    user = userService.getCurrentUser();
+                } catch (Exception e) {
+                    // 忽略获取当前用户时的异常
+                    logger.error("获取当前用户信息失败: {}", e.getMessage(), e);
+                }
                 if(user != null) {
                     log.setTenantId(user.getTenantId());
                 }

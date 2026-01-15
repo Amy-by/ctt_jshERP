@@ -43,10 +43,12 @@ public class MaterialCategoryService {
     @Resource
     private MaterialMapperEx materialMapperEx;
 
-    public MaterialCategory getMaterialCategory(long id)throws Exception {
+    public MaterialCategory getMaterialCategory(Long id)throws Exception {
         MaterialCategory result=null;
         try{
-            result=materialCategoryMapper.selectByPrimaryKey(id);
+            if (id != null && id > 0) {
+                result=materialCategoryMapper.selectByPrimaryKey(id);
+            }
         }catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -112,7 +114,8 @@ public class MaterialCategoryService {
             PageUtils.startPage();
             list=materialCategoryMapperEx.selectByConditionMaterialCategory(name, parentId);
         }catch(Exception e){
-            JshException.readFail(logger, e);
+            logger.error("查询物料分类列表失败: {}", e.getMessage(), e);
+            list = new ArrayList<>();
         }
         return list;
     }
@@ -124,10 +127,23 @@ public class MaterialCategoryService {
         materialCategory.setUpdateTime(new Date());
         int result=0;
         try{
+            logger.info("准备插入物料分类: {}", materialCategory);
+            logger.info("物料分类对象完整信息: id={}, name={}, parentId={}, sort={}, serialNo={}, remark={}, createTime={}, updateTime={}, tenantId={}, deleteFlag={}", 
+                        materialCategory.getId(), materialCategory.getName(), materialCategory.getParentId(), 
+                        materialCategory.getSort(), materialCategory.getSerialNo(), materialCategory.getRemark(),
+                        materialCategory.getCreateTime(), materialCategory.getUpdateTime(), materialCategory.getTenantId(),
+                        materialCategory.getDeleteFlag());
+            
             result=materialCategoryMapper.insertSelective(materialCategory);
+            logger.info("插入物料分类成功，结果: {}", result);
+            
+            logger.info("准备记录日志...");
             logService.insertLog("商品类型",
                     new StringBuffer(BusinessConstants.LOG_OPERATION_TYPE_ADD).append(materialCategory.getName()).toString(), request);
+            logger.info("日志记录成功");
         }catch(Exception e){
+            logger.error("插入物料分类失败: {}", e.getMessage(), e);
+            logger.error("完整异常堆栈:", e);
             JshException.writeFail(logger, e);
         }
         return result;
