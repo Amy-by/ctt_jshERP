@@ -1,10 +1,23 @@
-## ide
-**/.idea
-*.iml
+# 临时文件
+cookies.txt
+*.log
+logs/
+*.p12
 
-## backend
-**/target
-**/logs
+# IDE生成的文件
+.idea/
+.vscode/
+*.swp
+*.swo
 
-## front
-**/*.lock
+# 依赖包目录
+node_modules/
+target/
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+
+# 测试文件
+test_login.js
+security_report.md
