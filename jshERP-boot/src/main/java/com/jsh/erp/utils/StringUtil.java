@@ -274,10 +274,17 @@ public final class StringUtil {
      */
     public static List<Long> strToLongList(String strArr) {
         List<Long> idList=new ArrayList<Long>();
+        if (StringUtil.isEmpty(strArr)) {
+            return idList;
+        }
         String[] d=strArr.split(",");
         for (int i = 0, size = d.length; i < size; i++) {
-            if(d[i]!=null) {
-                idList.add(Long.parseLong(d[i]));
+            if(d[i]!=null && !d[i].trim().isEmpty()) {
+                try {
+                    idList.add(Long.parseLong(d[i].trim()));
+                } catch (NumberFormatException e) {
+                    // 跳过无效数字
+                }
             }
         }
         return idList;
@@ -292,10 +299,17 @@ public final class StringUtil {
      */
     public static List<BigDecimal> strToBigDecimalList(String strArr) {
         List<BigDecimal> idList=new ArrayList<>();
+        if (StringUtil.isEmpty(strArr)) {
+            return idList;
+        }
         String[] d=strArr.split(",");
         for (int i = 0, size = d.length; i < size; i++) {
-            if(d[i]!=null) {
-                idList.add(new BigDecimal(d[i]));
+            if(d[i]!=null && !d[i].trim().isEmpty()) {
+                try {
+                    idList.add(new BigDecimal(d[i].trim()));
+                } catch (NumberFormatException e) {
+                    // 跳过无效数字
+                }
             }
         }
         return idList;

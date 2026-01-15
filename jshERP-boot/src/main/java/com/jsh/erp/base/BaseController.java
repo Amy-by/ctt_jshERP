@@ -88,7 +88,8 @@ public class BaseController
         TableDataInfo rspData = new TableDataInfo();
         rspData.setCode(200);
         data.put("rows", list);
-        data.put("total", new PageInfo(list).getTotal());
+        // 确保total字段不为undefined
+        data.put("total", list != null ? list.size() : 0);
         rspData.setData(data);
         return rspData;
     }

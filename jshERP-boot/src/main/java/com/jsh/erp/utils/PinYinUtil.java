@@ -1,18 +1,20 @@
 package com.jsh.erp.utils;
 
-import lombok.extern.slf4j.Slf4j;
 import net.sourceforge.pinyin4j.PinyinHelper;
 import net.sourceforge.pinyin4j.format.HanyuPinyinCaseType;
 import net.sourceforge.pinyin4j.format.HanyuPinyinOutputFormat;
 import net.sourceforge.pinyin4j.format.HanyuPinyinToneType;
 import net.sourceforge.pinyin4j.format.exception.BadHanyuPinyinOutputFormatCombination;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @Author jishenghua
  * @Date 2024-01-08 23:03
  */
-@Slf4j
 public class PinYinUtil {
+
+    private static final Logger log = LoggerFactory.getLogger(PinYinUtil.class);
 
     public static String getFirstLettersLo(String ChineseLanguage) {
         return getFirstLetters(ChineseLanguage, HanyuPinyinCaseType.LOWERCASE);
