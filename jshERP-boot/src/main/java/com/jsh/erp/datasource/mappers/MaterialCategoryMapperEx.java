@@ -17,7 +17,8 @@ import java.util.Map;
 public interface MaterialCategoryMapperEx {
     List<MaterialCategory> selectByConditionMaterialCategory(
             @Param("name") String name,
-            @Param("parentId") Integer parentId);
+            @Param("parentId") Integer parentId,
+            @Param("tenantId") Long tenantId);
 
     List<TreeNode> getNodeTree(@Param("currentId")Long currentId);
     List<TreeNode> getNextNodeTree(Map<String, Object> parameterMap);

@@ -777,9 +777,14 @@
               }
               //图片校验
               if(this.fileList && this.fileList.length > 0) {
-                formData.imgName = this.fileList
-                let fileArr = this.fileList.split(',')
-                if(fileArr.length > 4) {
+                let fileNames = [];
+                this.fileList.forEach(file => {
+                  if(file.response && file.response.message) {
+                    fileNames.push(file.response.message);
+                  }
+                });
+                formData.imgName = fileNames.join(',');
+                if(fileNames.length > 4) {
                   this.$message.warning('抱歉，商品图片不能超过4张！');
                   return
                 }
@@ -801,9 +806,16 @@
                   that.confirmLoading = false
                   that.close();
                 }else{
-                  that.$message.warning(res.data.message);
+                  // 修复：直接使用res.message作为错误信息，而不是res.data.message
+                  let errorMsg = res.message || '数据写入异常';
+                  that.$message.error(errorMsg);
                   that.confirmLoading = false
                 }
+              }).catch(error => {
+                // 捕获网络或其他未知错误
+                console.error('请求错误:', error);
+                that.$message.error('数据写入异常：网络或服务器错误');
+                that.confirmLoading = false;
               }).finally(() => {
               })
             }

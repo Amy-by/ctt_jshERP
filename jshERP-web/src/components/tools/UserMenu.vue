@@ -42,9 +42,12 @@
     </span>
     <header-notice class="action"/>
     <a-dropdown>
-      <span v-if="isDesktop()" class="action ant-dropdown-link user-dropdown-menu">
+      <span v-show="isDesktop()" class="action ant-dropdown-link user-dropdown-menu">
         <a-icon type="down-circle"/>
         <span style="margin-left:4px">欢迎您，{{ nickname() }}</span>
+      </span>
+      <span v-show="!isDesktop()" class="action ant-dropdown-link user-dropdown-menu">
+        <a-icon type="down-circle"/>
       </span>
       <a-menu slot="overlay" class="user-dropdown-menu-wrapper">
         <a-menu-item key="3"  @click="systemSetting">

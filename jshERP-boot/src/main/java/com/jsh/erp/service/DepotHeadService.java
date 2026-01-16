@@ -116,14 +116,21 @@ public class DepotHeadService {
             String [] organArray = getOrganArray(subType, purchaseStatus);
             //以销定购，查看全部数据
             creatorArray = StringUtil.isNotEmpty(purchaseStatus) ? null: creatorArray;
+            //零售出库记录，查看全部数据
+            if("零售".equals(subType)) {
+                creatorArray = null;
+            }
             Map<Long,String> personMap = personService.getPersonMap();
             Map<Long,String> accountMap = accountService.getAccountMap();
             beginTime = Tools.parseDayToTime(beginTime,BusinessConstants.DAY_FIRST_TIME);
             endTime = Tools.parseDayToTime(endTime,BusinessConstants.DAY_LAST_TIME);
+            // 获取当前用户的tenantId
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             PageUtils.startPage();
             list = depotHeadMapperEx.selectByConditionDepotHead(type, subType, creatorArray, hasDebt,
                     statusArray, purchaseStatusArray, number, linkApply, linkNumber, beginTime, endTime,
-                    materialParam, organId, organArray, creator, depotId, depotArray, accountId, salesMan, remark);
+                    materialParam, organId, organArray, creator, depotId, depotArray, accountId, salesMan, remark, tenantId);
             if (null != list) {
                 List<Long> idList = new ArrayList<>();
                 List<String> numberList = new ArrayList<>();

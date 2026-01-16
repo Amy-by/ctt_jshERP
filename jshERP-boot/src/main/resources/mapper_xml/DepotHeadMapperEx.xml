@@ -165,6 +165,7 @@
             and (dh.remark like #{bindRemark} or di.remark like #{bindRemark})
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
         group by dh.id
         order by dh.id desc) tb
         left join jsh_depot_head jdh on jdh.id=tb.id and ifnull(jdh.delete_flag,'0') !='1'
@@ -272,6 +273,7 @@
         </if>
         and dh.sub_type!='调拨'
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
         <if test="column == 'createTime'">
             order by oper_time desc,number desc
         </if>
@@ -349,6 +351,7 @@
         </if>
         and dh.sub_type!='调拨'
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
     </select>
 
     <select id="findInOutDetailStatistic" parameterType="com.jsh.erp.datasource.entities.DepotItemExample" resultMap="ResultWithInfoExMap">
@@ -417,6 +420,7 @@
         </if>
         and dh.sub_type!='调拨'
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
     </select>
 
     <select id="findInOutMaterialCount" parameterType="com.jsh.erp.datasource.entities.DepotItemExample" resultMap="ResultInOutMaterialCount">
@@ -489,6 +493,7 @@
             and (dh.sub_type!='采购' and dh.sub_type!='采购退货' and dh.sub_type!='销售' and dh.sub_type!='销售退货')
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
         group by di.material_id, me.bar_code, m.name,m.model,m.standard,m.color,m.brand,m.mfrs,
         mc.name, m.unit, u.basic_unit
         <if test="column == 'createTime'">
@@ -567,6 +572,7 @@
             and (dh.sub_type!='采购' and dh.sub_type!='采购退货' and dh.sub_type!='销售' and dh.sub_type!='销售退货')
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
         group by di.material_id) a
     </select>
 
@@ -637,6 +643,7 @@
             and (dh.sub_type!='采购' and dh.sub_type!='采购退货' and dh.sub_type!='销售' and dh.sub_type!='销售退货')
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
     </select>
 
     <select id="findAllocationDetail" parameterType="com.jsh.erp.datasource.entities.DepotItemExample" resultMap="ResultWithInfoExMap">
@@ -697,6 +704,7 @@
             and (dh.remark like #{bindRemark} or di.remark like #{bindRemark})
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
         <if test="column == 'createTime'">
             order by oper_time desc,number desc
         </if>
@@ -762,6 +770,7 @@
             and (dh.remark like #{bindRemark} or di.remark like #{bindRemark})
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
     </select>
 
     <select id="findAllocationStatistic" parameterType="com.jsh.erp.datasource.entities.DepotItemExample" resultMap="ResultWithInfoExMap">
@@ -820,6 +829,7 @@
             and (dh.remark like #{bindRemark} or di.remark like #{bindRemark})
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
+        and dh.tenant_id = #{tenantId}
     </select>
 
     <select id="getStatementAccount" resultType="com.jsh.erp.datasource.vo.DepotHeadVo4StatementAccount">
@@ -834,7 +844,9 @@
             where dh.organ_id=s.id
             and dh.type=#{type} and dh.sub_type=#{subType}
             and dh.oper_time &lt;= #{beginTime}
-            and ifnull(dh.delete_flag,'0') !='1') preDebtMoney,
+            and ifnull(dh.delete_flag,'0') !='1'
+            and dh.tenant_id = #{tenantId})
+            preDebtMoney,
             -- 上期退货的欠款金额
             (select
             ifnull(sum(dh.discount_last_money),0)+ifnull(sum(dh.other_money),0)-ifnull(sum(dh.deposit),0)-abs(ifnull(sum(dh.change_amount),0))
@@ -842,7 +854,9 @@
             where dh.organ_id=s.id
             and dh.type=#{typeBack} and dh.sub_type=#{subTypeBack}
             and dh.oper_time &lt;= #{beginTime}
-            and ifnull(dh.delete_flag,'0') !='1') preReturnDebtMoney,
+            and ifnull(dh.delete_flag,'0') !='1'
+            and dh.tenant_id = #{tenantId})
+            preReturnDebtMoney,
             -- 上期收款
             (select ifnull(sum(ai.each_amount),0) from jsh_account_item ai
             left join jsh_account_head ah on ai.header_id=ah.id and ifnull(ah.delete_flag,'0') !='1'
@@ -862,7 +876,9 @@
             where dh.organ_id=s.id
             and dh.type=#{type} and dh.sub_type=#{subType}
             and dh.oper_time>#{beginTime} and dh.oper_time &lt;= #{endTime}
-            and ifnull(dh.delete_flag,'0') !='1') debtMoney,
+            and ifnull(dh.delete_flag,'0') !='1'
+            and dh.tenant_id = #{tenantId})
+            debtMoney,
             -- 本期退货的欠款金额
             (select
             ifnull(sum(dh.discount_last_money),0)+ifnull(sum(dh.other_money),0)-ifnull(sum(dh.deposit),0)-abs(ifnull(sum(dh.change_amount),0))
@@ -870,7 +886,9 @@
             where dh.organ_id=s.id
             and dh.type=#{typeBack} and dh.sub_type=#{subTypeBack}
             and dh.oper_time>#{beginTime} and dh.oper_time &lt;= #{endTime}
-            and ifnull(dh.delete_flag,'0') !='1') returnDebtMoney,
+            and ifnull(dh.delete_flag,'0') !='1'
+            and dh.tenant_id = #{tenantId})
+            returnDebtMoney,
             -- 本期收款
             (select ifnull(sum(ai.each_amount),0) from jsh_account_item ai
             left join jsh_account_head ah on ai.header_id=ah.id and ifnull(ah.delete_flag,'0') !='1'
@@ -921,7 +939,9 @@
             where dh.organ_id=s.id
             and dh.type=#{type} and dh.sub_type=#{subType}
             and dh.oper_time &lt;= #{beginTime}
-            and ifnull(dh.delete_flag,'0') !='1') preDebtMoney,
+            and ifnull(dh.delete_flag,'0') !='1'
+            and dh.tenant_id = #{tenantId})
+            preDebtMoney,
             -- 上期退货的欠款金额
             (select
             ifnull(sum(dh.discount_last_money),0)+ifnull(sum(dh.other_money),0)-ifnull(sum(dh.deposit),0)-abs(ifnull(sum(dh.change_amount),0))
@@ -929,7 +949,9 @@
             where dh.organ_id=s.id
             and dh.type=#{typeBack} and dh.sub_type=#{subTypeBack}
             and dh.oper_time &lt;= #{beginTime}
-            and ifnull(dh.delete_flag,'0') !='1') preReturnDebtMoney,
+            and ifnull(dh.delete_flag,'0') !='1'
+            and dh.tenant_id = #{tenantId})
+            preReturnDebtMoney,
             -- 上期收款
             (select ifnull(sum(ai.each_amount),0) from jsh_account_item ai
             left join jsh_account_head ah on ai.header_id=ah.id and ifnull(ah.delete_flag,'0') !='1'
@@ -949,7 +971,9 @@
             where dh.organ_id=s.id
             and dh.type=#{type} and dh.sub_type=#{subType}
             and dh.oper_time>#{beginTime} and dh.oper_time &lt;= #{endTime}
-            and ifnull(dh.delete_flag,'0') !='1') debtMoney,
+            and ifnull(dh.delete_flag,'0') !='1'
+            and dh.tenant_id = #{tenantId})
+            debtMoney,
             -- 本期退货的欠款金额
             (select
             ifnull(sum(dh.discount_last_money),0)+ifnull(sum(dh.other_money),0)-ifnull(sum(dh.deposit),0)-abs(ifnull(sum(dh.change_amount),0))
@@ -957,7 +981,9 @@
             where dh.organ_id=s.id
             and dh.type=#{typeBack} and dh.sub_type=#{subTypeBack}
             and dh.oper_time>#{beginTime} and dh.oper_time &lt;= #{endTime}
-            and ifnull(dh.delete_flag,'0') !='1') returnDebtMoney,
+            and ifnull(dh.delete_flag,'0') !='1'
+            and dh.tenant_id = #{tenantId})
+            returnDebtMoney,
             -- 本期收款
             (select ifnull(sum(ai.each_amount),0) from jsh_account_item ai
             left join jsh_account_head ah on ai.header_id=ah.id and ifnull(ah.delete_flag,'0') !='1'

@@ -14,9 +14,7 @@
             and parent_id = #{parentId}
         </if>
         and Id !=1
-        <if test="offset != null and rows != null">
-            limit #{offset},#{rows}
-        </if>
+        and tenant_id = #{tenantId}
     </select>
     <select id="countsByMaterialCategory" resultType="java.lang.Long">
         SELECT
@@ -32,6 +30,7 @@
             and parent_id = #{parentId}
         </if>
         and Id !=1
+        and tenant_id = #{tenantId}
     </select>
 
     <resultMap id="BaseTreeResultMap" type="com.jsh.erp.datasource.vo.TreeNode">

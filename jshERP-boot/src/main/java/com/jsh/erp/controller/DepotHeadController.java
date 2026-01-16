@@ -680,16 +680,14 @@ public class DepotHeadController extends BaseController {
         BaseResponseInfo res = new BaseResponseInfo();
         try {
             Map<String, Object> map = new HashMap<>();
-            String loginName = userService.getCurrentUser().getLoginName();
-            if(!"admin".equals(loginName)) {
-                String today = Tools.getNow() + BusinessConstants.DAY_FIRST_TIME;
-                String monthFirstDay = Tools.firstDayOfMonth(Tools.getCurrentMonth()) + BusinessConstants.DAY_FIRST_TIME;
-                String yesterdayBegin = Tools.getYesterday() + BusinessConstants.DAY_FIRST_TIME;
-                String yesterdayEnd = Tools.getYesterday() + BusinessConstants.DAY_LAST_TIME;
-                String yearBegin = Tools.getYearBegin() + BusinessConstants.DAY_FIRST_TIME;
-                String yearEnd = Tools.getYearEnd() + BusinessConstants.DAY_LAST_TIME;
-                map = depotHeadService.getBuyAndSaleStatistics(today, monthFirstDay, yesterdayBegin, yesterdayEnd, yearBegin, yearEnd, request);
-            }
+            // 移除admin用户限制，所有用户都能看到统计数据
+            String today = Tools.getNow() + BusinessConstants.DAY_FIRST_TIME;
+            String monthFirstDay = Tools.firstDayOfMonth(Tools.getCurrentMonth()) + BusinessConstants.DAY_FIRST_TIME;
+            String yesterdayBegin = Tools.getYesterday() + BusinessConstants.DAY_FIRST_TIME;
+            String yesterdayEnd = Tools.getYesterday() + BusinessConstants.DAY_LAST_TIME;
+            String yearBegin = Tools.getYearBegin() + BusinessConstants.DAY_FIRST_TIME;
+            String yearEnd = Tools.getYearEnd() + BusinessConstants.DAY_LAST_TIME;
+            map = depotHeadService.getBuyAndSaleStatistics(today, monthFirstDay, yesterdayBegin, yesterdayEnd, yearBegin, yearEnd, request);
             res.code = 200;
             res.data = map;
         } catch(Exception e){

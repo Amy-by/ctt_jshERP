@@ -112,7 +112,10 @@ public class MaterialCategoryService {
         List<MaterialCategory> list=null;
         try{
             PageUtils.startPage();
-            list=materialCategoryMapperEx.selectByConditionMaterialCategory(name, parentId);
+            //获取当前用户的tenantId
+            User userInfo=userService.getCurrentUser();
+            Long tenantId=userInfo==null?null:userInfo.getTenantId();
+            list=materialCategoryMapperEx.selectByConditionMaterialCategory(name, parentId, tenantId);
         }catch(Exception e){
             logger.error("查询物料分类列表失败: {}", e.getMessage(), e);
             list = new ArrayList<>();
