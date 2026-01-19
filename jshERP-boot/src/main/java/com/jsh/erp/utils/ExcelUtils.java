@@ -115,9 +115,14 @@ public class ExcelUtils {
 	 */
 
 	public static File exportObjectsOneSheet(String fileName, String tip,
-											 String[] names, String title, List<Object[]> objects) throws Exception {
-		File excelFile = new File("/opt/"+ fileName);
-		WritableWorkbook wtwb = Workbook.createWorkbook(excelFile);
+                                             String[] names, String title, List<Object[]> objects) throws Exception {
+        // 使用项目根目录下的temp目录来生成Excel文件，确保有写入权限
+        File tempDir = new File(System.getProperty("user.dir") + File.separator + "temp");
+        if (!tempDir.exists()) {
+            tempDir.mkdirs();
+        }
+        File excelFile = new File(tempDir, fileName);
+        WritableWorkbook wtwb = Workbook.createWorkbook(excelFile);
 		WritableSheet sheet = wtwb.createSheet(title, 0);
 		sheet.getSettings().setDefaultColumnWidth(12);
 

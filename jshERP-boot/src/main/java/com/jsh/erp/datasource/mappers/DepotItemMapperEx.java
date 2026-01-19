@@ -197,12 +197,14 @@ public interface DepotItemMapperEx {
             @Param("rows") Integer rows,
             @Param("materialParam") String materialParam,
             @Param("depotList") List<Long> depotList,
-            @Param("categoryList") List<Long> categoryList);
+            @Param("categoryList") List<Long> categoryList,
+            @Param("tenantId") Long tenantId);
 
     int findStockWarningCountTotal(
             @Param("materialParam") String materialParam,
             @Param("depotList") List<Long> depotList,
-            @Param("categoryList") List<Long> categoryList);
+            @Param("categoryList") List<Long> categoryList,
+            @Param("tenantId") Long tenantId);
 
     BigDecimal getFinishNumber(
             @Param("meId") Long meId,

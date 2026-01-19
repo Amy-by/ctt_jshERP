@@ -273,7 +273,6 @@
         </if>
         and dh.sub_type!='调拨'
         and ifnull(dh.delete_flag,'0') !='1'
-        and dh.tenant_id = #{tenantId}
         <if test="column == 'createTime'">
             order by oper_time desc,number desc
         </if>
@@ -351,7 +350,6 @@
         </if>
         and dh.sub_type!='调拨'
         and ifnull(dh.delete_flag,'0') !='1'
-        and dh.tenant_id = #{tenantId}
     </select>
 
     <select id="findInOutDetailStatistic" parameterType="com.jsh.erp.datasource.entities.DepotItemExample" resultMap="ResultWithInfoExMap">
@@ -420,7 +418,6 @@
         </if>
         and dh.sub_type!='调拨'
         and ifnull(dh.delete_flag,'0') !='1'
-        and dh.tenant_id = #{tenantId}
     </select>
 
     <select id="findInOutMaterialCount" parameterType="com.jsh.erp.datasource.entities.DepotItemExample" resultMap="ResultInOutMaterialCount">
@@ -493,7 +490,6 @@
             and (dh.sub_type!='采购' and dh.sub_type!='采购退货' and dh.sub_type!='销售' and dh.sub_type!='销售退货')
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
-        and dh.tenant_id = #{tenantId}
         group by di.material_id, me.bar_code, m.name,m.model,m.standard,m.color,m.brand,m.mfrs,
         mc.name, m.unit, u.basic_unit
         <if test="column == 'createTime'">
@@ -572,7 +568,6 @@
             and (dh.sub_type!='采购' and dh.sub_type!='采购退货' and dh.sub_type!='销售' and dh.sub_type!='销售退货')
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
-        and dh.tenant_id = #{tenantId}
         group by di.material_id) a
     </select>
 
@@ -643,7 +638,6 @@
             and (dh.sub_type!='采购' and dh.sub_type!='采购退货' and dh.sub_type!='销售' and dh.sub_type!='销售退货')
         </if>
         and ifnull(dh.delete_flag,'0') !='1'
-        and dh.tenant_id = #{tenantId}
     </select>
 
     <select id="findAllocationDetail" parameterType="com.jsh.erp.datasource.entities.DepotItemExample" resultMap="ResultWithInfoExMap">

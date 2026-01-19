@@ -18,6 +18,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
 import javax.annotation.Resource;
 import javax.servlet.http.HttpServletRequest;
@@ -941,7 +943,11 @@ public class DepotItemService {
     public List<DepotItemStockWarningCount> findStockWarningCount(Integer offset, Integer rows, String materialParam, List<Long> depotList, List<Long> categoryList) {
         List<DepotItemStockWarningCount> list = null;
         try{
-            list =depotItemMapperEx.findStockWarningCount(offset, rows, materialParam, depotList, categoryList);
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
+            list =depotItemMapperEx.findStockWarningCount(offset, rows, materialParam, depotList, categoryList, tenantId);
         }catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -952,7 +958,11 @@ public class DepotItemService {
     public int findStockWarningCountTotal(String materialParam, List<Long> depotList, List<Long> categoryList) {
         int result = 0;
         try{
-            result =depotItemMapperEx.findStockWarningCountTotal(materialParam, depotList, categoryList);
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
+            result =depotItemMapperEx.findStockWarningCountTotal(materialParam, depotList, categoryList, tenantId);
         }catch(Exception e){
             JshException.readFail(logger, e);
         }

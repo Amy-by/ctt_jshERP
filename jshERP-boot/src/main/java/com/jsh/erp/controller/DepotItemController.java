@@ -353,6 +353,8 @@ public class DepotItemController {
                                       @RequestParam("materialParam") String materialParam,
                                       @RequestParam(value = "mpList", required = false) String mpList,
                                       HttpServletRequest request)throws Exception {
+        logger.debug("进销存统计查询开始，参数：currentPage={}, pageSize={}, depotIds={}, categoryId={}, beginTime={}, endTime={}, materialParam={}", 
+                currentPage, pageSize, depotIds, categoryId, beginTime, endTime, materialParam);
         BaseResponseInfo res = new BaseResponseInfo();
         Map<String, Object> map = new HashMap<>();
         try {
@@ -360,17 +362,23 @@ public class DepotItemController {
             List<Long> categoryIdList = new ArrayList<>();
             if(categoryId != null){
                 categoryIdList = materialService.getListByParentId(categoryId);
+                logger.debug("获取分类列表：categoryId={}, categoryIdList={}", categoryId, categoryIdList);
             }
             beginTime = Tools.parseDayToTime(beginTime, BusinessConstants.DAY_FIRST_TIME);
             endTime = Tools.parseDayToTime(endTime,BusinessConstants.DAY_LAST_TIME);
+            logger.debug("解析时间范围：beginTime={}, endTime={}", beginTime, endTime);
             List<Long> depotList = parseListByDepotIds(depotIds);
+            logger.debug("解析仓库列表：depotIds={}, depotList={}", depotIds, depotList);
             List<DepotItemVo4WithInfoEx> dataList = depotItemService.getInOutStock(StringUtil.toNull(materialParam),
                     categoryIdList, endTime,(currentPage-1)*pageSize, pageSize);
+            logger.debug("获取进销存数据列表，大小：{}", dataList != null ? dataList.size() : 0);
             int total = depotItemService.getInOutStockCount(StringUtil.toNull(materialParam), categoryIdList, endTime);
+            logger.debug("获取进销存数据总数：{}", total);
             map.put("total", total);
             //存放数据json数组
             JSONArray dataArray = new JSONArray();
             if (null != dataList) {
+                logger.debug("开始处理进销存数据，共{}条", dataList.size());
                 for (DepotItemVo4WithInfoEx diEx : dataList) {
                     JSONObject item = new JSONObject();
                     Long mId = diEx.getMId();
@@ -389,9 +397,11 @@ public class DepotItemController {
                     item.put("unitId", diEx.getUnitId());
                     item.put("unitName", null!=diEx.getUnitId() ? diEx.getMaterialUnit()+"[多单位]" : diEx.getMaterialUnit());
                     BigDecimal prevSum = depotItemService.getStockByParamWithDepotList(depotList,mId,null,beginTime);
+                    logger.debug("物料ID={}，期初库存：{}", mId, prevSum);
                     Map<String,BigDecimal> intervalMap = depotItemService.getIntervalMapByParamWithDepotList(depotList,mId,beginTime,endTime);
                     BigDecimal inSum = intervalMap.get("inSum");
                     BigDecimal outSum = intervalMap.get("outSum");
+                    logger.debug("物料ID={}，期间入库：{}，期间出库：{}", mId, inSum, outSum);
                     BigDecimal thisSum = prevSum.add(inSum).subtract(outSum);
                     item.put("prevSum", prevSum);
                     item.put("inSum", inSum);
@@ -418,16 +428,19 @@ public class DepotItemController {
                 }
             }
             map.put("rows", dataArray);
+            logger.debug("生成最终数据数组，大小：{}", dataArray.size());
             res.code = 200;
             res.data = map;
         } catch (BusinessRunTimeException e) {
+            logger.error("进销存统计查询业务异常：{}", e.getMessage(), e);
             res.code = e.getCode();
             res.data = e.getData().get("message");
         } catch(Exception e){
-            logger.error(e.getMessage(), e);
+            logger.error("进销存统计查询异常：{}", e.getMessage(), e);
             res.code = 500;
             res.data = "获取数据失败";
         }
+        logger.debug("进销存统计查询结束，返回结果：code={}, data={}", res.code, res.data);
         return res;
     }
 
@@ -597,30 +610,41 @@ public class DepotItemController {
                                   @RequestParam("materialParam") String materialParam,
                                   @RequestParam(value = "mpList",required = false) String mpList,
                                   HttpServletRequest request)throws Exception {
+        logger.debug("采购统计查询开始，参数：currentPage={}, pageSize={}, beginTime={}, endTime={}, organId={}, depotId={}, categoryId={}, organizationId={}, materialParam={}", 
+                currentPage, pageSize, beginTime, endTime, organId, depotId, categoryId, organizationId, materialParam);
         BaseResponseInfo res = new BaseResponseInfo();
         Map<String, Object> map = new HashMap<String, Object>();
         beginTime = Tools.parseDayToTime(beginTime, BusinessConstants.DAY_FIRST_TIME);
         endTime = Tools.parseDayToTime(endTime,BusinessConstants.DAY_LAST_TIME);
+        logger.debug("解析时间范围：beginTime={}, endTime={}", beginTime, endTime);
         try {
             String [] creatorArray = depotHeadService.getCreatorArray();
+            logger.debug("获取创建者数组：{}", creatorArray);
             if(creatorArray == null && organizationId != null) {
                 creatorArray = depotHeadService.getCreatorArrayByOrg(organizationId);
+                logger.debug("按组织获取创建者数组：{}", creatorArray);
             }
             String [] organArray = null;
             List<Long> categoryList = new ArrayList<>();
             if(categoryId != null){
                 categoryList = materialService.getListByParentId(categoryId);
+                logger.debug("获取分类列表：categoryId={}, categoryList={}", categoryId, categoryList);
             }
             List<Long> depotList = depotService.parseDepotList(depotId);
+            logger.debug("获取仓库列表：depotId={}, depotList={}", depotId, depotList);
             Boolean forceFlag = systemConfigService.getForceApprovalFlag();
+            logger.debug("获取强制审批标志：{}", forceFlag);
             List<DepotItemVo4WithInfoEx> dataList = depotItemService.getListWithBuyOrSale(StringUtil.toNull(materialParam),
                     "buy", beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag, (currentPage-1)*pageSize, pageSize);
+            logger.debug("获取采购统计数据列表，大小：{}", dataList != null ? dataList.size() : 0);
             int total = depotItemService.getListWithBuyOrSaleCount(StringUtil.toNull(materialParam),
                     "buy", beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag);
+            logger.debug("获取采购统计数据总数：{}", total);
             map.put("total", total);
             //存放数据json数组
             JSONArray dataArray = new JSONArray();
             if (null != dataList) {
+                logger.debug("开始处理采购统计数据，共{}条", dataList.size());
                 for (DepotItemVo4WithInfoEx diEx : dataList) {
                     JSONObject item = new JSONObject();
                     BigDecimal InSum = depotItemService.buyOrSale("入库", "采购", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "number");
@@ -628,6 +652,8 @@ public class DepotItemController {
                     BigDecimal InSumPrice = depotItemService.buyOrSale("入库", "采购", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "price");
                     BigDecimal OutSumPrice = depotItemService.buyOrSale("出库", "采购退货", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "price");
                     BigDecimal InOutSumPrice = InSumPrice.subtract(OutSumPrice);
+                    logger.debug("物料ID={}，采购入库数量：{}，采购退货数量：{}，采购金额：{}，退货金额：{}，实际采购金额：{}", 
+                            diEx.getMaterialExtendId(), InSum, OutSum, InSumPrice, OutSumPrice, InOutSumPrice);
                     item.put("barCode", diEx.getBarCode());
                     item.put("materialName", diEx.getMName());
                     item.put("materialModel", diEx.getMModel());
@@ -654,15 +680,17 @@ public class DepotItemController {
             BigDecimal outSumPriceTotal = depotItemService.buyOrSalePriceTotal("出库", "采购退货", StringUtil.toNull(materialParam),
                     beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag);
             BigDecimal realityPriceTotal = inSumPriceTotal.subtract(outSumPriceTotal);
+            logger.debug("采购统计总计：入库总金额={}，退货总金额={}，实际采购总金额={}", inSumPriceTotal, outSumPriceTotal, realityPriceTotal);
             map.put("rows", dataArray);
             map.put("realityPriceTotal", realityPriceTotal);
             res.code = 200;
             res.data = map;
         } catch(Exception e){
-            logger.error(e.getMessage(), e);
+            logger.error("采购统计查询异常：{}", e.getMessage(), e);
             res.code = 500;
             res.data = "获取数据失败";
         }
+        logger.debug("采购统计查询结束，返回结果：code={}, data={}", res.code, res.data);
         return res;
     }
 
@@ -690,30 +718,41 @@ public class DepotItemController {
                                       @RequestParam("materialParam") String materialParam,
                                       @RequestParam(value = "mpList", required = false) String mpList,
                                       HttpServletRequest request)throws Exception {
+        logger.debug("零售统计查询开始，参数：currentPage={}, pageSize={}, beginTime={}, endTime={}, organId={}, depotId={}, categoryId={}, organizationId={}, materialParam={}", 
+                currentPage, pageSize, beginTime, endTime, organId, depotId, categoryId, organizationId, materialParam);
         BaseResponseInfo res = new BaseResponseInfo();
         Map<String, Object> map = new HashMap<String, Object>();
         beginTime = Tools.parseDayToTime(beginTime, BusinessConstants.DAY_FIRST_TIME);
         endTime = Tools.parseDayToTime(endTime,BusinessConstants.DAY_LAST_TIME);
+        logger.debug("解析时间范围：beginTime={}, endTime={}", beginTime, endTime);
         try {
             String [] creatorArray = depotHeadService.getCreatorArray();
+            logger.debug("获取创建者数组：{}", creatorArray);
             if(creatorArray == null && organizationId != null) {
                 creatorArray = depotHeadService.getCreatorArrayByOrg(organizationId);
+                logger.debug("按组织获取创建者数组：{}", creatorArray);
             }
             String [] organArray = null;
             List<Long> categoryList = new ArrayList<>();
             if(categoryId != null){
                 categoryList = materialService.getListByParentId(categoryId);
+                logger.debug("获取分类列表：categoryId={}, categoryList={}", categoryId, categoryList);
             }
             List<Long> depotList = depotService.parseDepotList(depotId);
+            logger.debug("获取仓库列表：depotId={}, depotList={}", depotId, depotList);
             Boolean forceFlag = systemConfigService.getForceApprovalFlag();
+            logger.debug("获取强制审批标志：{}", forceFlag);
             List<DepotItemVo4WithInfoEx> dataList = depotItemService.getListWithBuyOrSale(StringUtil.toNull(materialParam),
                     "retail", beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag, (currentPage-1)*pageSize, pageSize);
+            logger.debug("获取零售统计数据列表，大小：{}", dataList != null ? dataList.size() : 0);
             int total = depotItemService.getListWithBuyOrSaleCount(StringUtil.toNull(materialParam),
                     "retail", beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag);
+            logger.debug("获取零售统计数据总数：{}", total);
             map.put("total", total);
             //存放数据json数组
             JSONArray dataArray = new JSONArray();
             if (null != dataList) {
+                logger.debug("开始处理零售统计数据，共{}条", dataList.size());
                 for (DepotItemVo4WithInfoEx diEx : dataList) {
                     JSONObject item = new JSONObject();
                     BigDecimal OutSumRetail = depotItemService.buyOrSale("出库", "零售", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "number");
@@ -721,6 +760,8 @@ public class DepotItemController {
                     BigDecimal OutSumRetailPrice = depotItemService.buyOrSale("出库", "零售", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "price");
                     BigDecimal InSumRetailPrice = depotItemService.buyOrSale("入库", "零售退货", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "price");
                     BigDecimal OutInSumPrice = OutSumRetailPrice.subtract(InSumRetailPrice);
+                    logger.debug("物料ID={}，零售出库数量：{}，零售退货数量：{}，零售金额：{}，退货金额：{}，实际零售金额：{}", 
+                            diEx.getMaterialExtendId(), OutSumRetail, InSumRetail, OutSumRetailPrice, InSumRetailPrice, OutInSumPrice);
                     item.put("barCode", diEx.getBarCode());
                     item.put("materialName", diEx.getMName());
                     item.put("materialModel", diEx.getMModel());
@@ -747,15 +788,17 @@ public class DepotItemController {
             BigDecimal inSumPriceTotal = depotItemService.buyOrSalePriceTotal("入库", "零售退货", StringUtil.toNull(materialParam),
                     beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag);
             BigDecimal realityPriceTotal = outSumPriceTotal.subtract(inSumPriceTotal);
+            logger.debug("零售统计总计：零售出库总金额={}，零售退货总金额={}，实际零售总金额={}", outSumPriceTotal, inSumPriceTotal, realityPriceTotal);
             map.put("rows", dataArray);
             map.put("realityPriceTotal", realityPriceTotal);
             res.code = 200;
             res.data = map;
         } catch(Exception e){
-            logger.error(e.getMessage(), e);
+            logger.error("零售统计查询异常：{}", e.getMessage(), e);
             res.code = 500;
             res.data = "获取数据失败";
         }
+        logger.debug("零售统计查询结束，返回结果：code={}, data={}", res.code, res.data);
         return res;
     }
 
@@ -784,30 +827,42 @@ public class DepotItemController {
                                     @RequestParam("materialParam") String materialParam,
                                     @RequestParam(value = "mpList", required = false) String mpList,
                                     HttpServletRequest request)throws Exception {
+        logger.debug("销售统计查询开始，参数：currentPage={}, pageSize={}, beginTime={}, endTime={}, organId={}, depotId={}, categoryId={}, organizationId={}, materialParam={}", 
+                currentPage, pageSize, beginTime, endTime, organId, depotId, categoryId, organizationId, materialParam);
         BaseResponseInfo res = new BaseResponseInfo();
         Map<String, Object> map = new HashMap<String, Object>();
         beginTime = Tools.parseDayToTime(beginTime, BusinessConstants.DAY_FIRST_TIME);
         endTime = Tools.parseDayToTime(endTime,BusinessConstants.DAY_LAST_TIME);
+        logger.debug("解析时间范围：beginTime={}, endTime={}", beginTime, endTime);
         try {
             String [] creatorArray = depotHeadService.getCreatorArray();
+            logger.debug("获取创建者数组：{}", creatorArray);
             if(creatorArray == null && organizationId != null) {
                 creatorArray = depotHeadService.getCreatorArrayByOrg(organizationId);
+                logger.debug("按组织获取创建者数组：{}", creatorArray);
             }
             String [] organArray = depotHeadService.getOrganArray("销售", "");
+            logger.debug("获取销售组织数组：{}", organArray);
             List<Long> categoryList = new ArrayList<>();
             if(categoryId != null){
                 categoryList = materialService.getListByParentId(categoryId);
+                logger.debug("获取分类列表：categoryId={}, categoryList={}", categoryId, categoryList);
             }
             List<Long> depotList = depotService.parseDepotList(depotId);
+            logger.debug("获取仓库列表：depotId={}, depotList={}", depotId, depotList);
             Boolean forceFlag = systemConfigService.getForceApprovalFlag();
+            logger.debug("获取强制审批标志：{}", forceFlag);
             List<DepotItemVo4WithInfoEx> dataList = depotItemService.getListWithBuyOrSale(StringUtil.toNull(materialParam),
                     "sale", beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag, (currentPage-1)*pageSize, pageSize);
+            logger.debug("获取销售统计数据列表，大小：{}", dataList != null ? dataList.size() : 0);
             int total = depotItemService.getListWithBuyOrSaleCount(StringUtil.toNull(materialParam),
                     "sale", beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag);
+            logger.debug("获取销售统计数据总数：{}", total);
             map.put("total", total);
             //存放数据json数组
             JSONArray dataArray = new JSONArray();
             if (null != dataList) {
+                logger.debug("开始处理销售统计数据，共{}条", dataList.size());
                 for (DepotItemVo4WithInfoEx diEx : dataList) {
                     JSONObject item = new JSONObject();
                     BigDecimal OutSum = depotItemService.buyOrSale("出库", "销售", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "number");
@@ -815,6 +870,8 @@ public class DepotItemController {
                     BigDecimal OutSumPrice = depotItemService.buyOrSale("出库", "销售", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "price");
                     BigDecimal InSumPrice = depotItemService.buyOrSale("入库", "销售退货", diEx.getMaterialExtendId(), beginTime, endTime, creatorArray, organId, organArray, depotList, forceFlag, "price");
                     BigDecimal OutInSumPrice = OutSumPrice.subtract(InSumPrice);
+                    logger.debug("物料ID={}，销售出库数量：{}，销售退货数量：{}，销售金额：{}，退货金额：{}，实际销售金额：{}", 
+                            diEx.getMaterialExtendId(), OutSum, InSum, OutSumPrice, InSumPrice, OutInSumPrice);
                     item.put("barCode", diEx.getBarCode());
                     item.put("materialName", diEx.getMName());
                     item.put("materialModel", diEx.getMModel());
@@ -841,15 +898,17 @@ public class DepotItemController {
             BigDecimal inSumPriceTotal = depotItemService.buyOrSalePriceTotal("入库", "销售退货", StringUtil.toNull(materialParam),
                     beginTime, endTime, creatorArray, organId, organArray, categoryList, depotList, forceFlag);
             BigDecimal realityPriceTotal = outSumPriceTotal.subtract(inSumPriceTotal);
+            logger.debug("销售统计总计：销售出库总金额={}，销售退货总金额={}，实际销售总金额={}", outSumPriceTotal, inSumPriceTotal, realityPriceTotal);
             map.put("rows", dataArray);
             map.put("realityPriceTotal", realityPriceTotal);
             res.code = 200;
             res.data = map;
         } catch(Exception e){
-            logger.error(e.getMessage(), e);
+            logger.error("销售统计查询异常：{}", e.getMessage(), e);
             res.code = 500;
             res.data = "获取数据失败";
         }
+        logger.debug("销售统计查询结束，返回结果：code={}, data={}", res.code, res.data);
         return res;
     }
 

@@ -26,6 +26,10 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
+import java.util.Map;
+import java.util.Set;
+
 import javax.annotation.Resource;
 import javax.imageio.ImageIO;
 import javax.imageio.stream.ImageOutputStream;
@@ -646,22 +650,123 @@ public class SystemConfigService {
      * @throws Exception
      */
     public void exportExcelByParam(String title, String head, String tip, JSONArray arr, HttpServletResponse response) throws Exception {
+        // 直接打印到控制台，便于调试
+        System.out.println("====================================");
+        System.out.println("开始导出Excel，title: " + title);
+        System.out.println("head: " + head);
+        System.out.println("tip: " + tip);
+        System.out.println("arr大小: " + (arr == null ? 0 : arr.size()));
+        
         List<String> nameList = StringUtil.strToStringList(head);
+        System.out.println("nameList: " + nameList);
+        
         String[] names = StringUtil.listToStringArray(nameList);
+        System.out.println("names数组: " + Arrays.toString(names));
+        
         List<Object[]> objects = new ArrayList<>();
-        if (null != arr) {
-            for (Object object: arr) {
-                List<Object> list = (List<Object>) object;
-                Object[] objs = new Object[names.length];
-                for (int i = 0; i < list.size(); i++) {
-                    if(null != list.get(i)) {
-                        objs[i] = list.get(i);
-                    }
+        
+        // 如果nameList为空，尝试从arr中推断列名
+        if (nameList == null || nameList.isEmpty()) {
+            System.out.println("nameList为空，尝试从数据中推断列名");
+            if (arr != null && arr.size() > 0) {
+                Object firstObject = arr.get(0);
+                if (firstObject instanceof JSONObject) {
+                    JSONObject jsonObject = (JSONObject) firstObject;
+                    // 从JSONObject中获取所有键作为列名
+                    Set<String> keySet = jsonObject.keySet();
+                    nameList = new ArrayList<>(keySet);
+                    names = nameList.toArray(new String[0]);
+                    System.out.println("从数据中推断的列名: " + nameList);
+                    System.out.println("从数据中推断的names数组: " + Arrays.toString(names));
                 }
-                objects.add(objs);
             }
         }
+        
+        if (null != arr && arr.size() > 0) {
+            System.out.println("进入数据处理逻辑，arr大小: " + arr.size());
+            for (int idx = 0; idx < arr.size(); idx++) {
+                Object object = arr.get(idx);
+                System.out.println("第" + (idx + 1) + "条数据类型: " + (object == null ? "null" : object.getClass().getName()));
+                System.out.println("第" + (idx + 1) + "条数据内容: " + object);
+                
+                Object[] objs = new Object[names.length];
+                
+                if (object == null) {
+                    System.out.println("第" + (idx + 1) + "条数据为null");
+                } else if (object instanceof List) {
+                    // 如果是List类型，直接使用
+                    System.out.println("数据类型为List");
+                    List<?> list = (List<?>) object;
+                    System.out.println("List大小: " + list.size());
+                    for (int i = 0; i < Math.min(list.size(), names.length); i++) {
+                        Object value = list.get(i);
+                        objs[i] = value;
+                        System.out.println("第" + (i + 1) + "列值: " + value);
+                    }
+                } else if (object instanceof JSONObject) {
+                    // 如果是JSONObject类型，根据标题字段名获取对应值
+                    System.out.println("数据类型为JSONObject");
+                    JSONObject jsonObject = (JSONObject) object;
+                    System.out.println("JSONObject内容: " + jsonObject);
+                    
+                    // 遍历所有列名，从JSONObject中获取对应值
+                    for (int i = 0; i < nameList.size(); i++) {
+                        String fieldName = nameList.get(i);
+                        // 去除标题中的*号（必填标记）
+                        if (fieldName.contains("*")) {
+                            fieldName = fieldName.replace("*", "");
+                        }
+                        Object value = jsonObject.get(fieldName);
+                        objs[i] = value;
+                        System.out.println("字段" + fieldName + "对应值: " + value);
+                    }
+                } else if (object instanceof Map) {
+                    // 如果是Map类型，处理方式同JSONObject
+                    System.out.println("数据类型为Map");
+                    Map<?, ?> map = (Map<?, ?>) object;
+                    System.out.println("Map内容: " + map);
+                    
+                    for (int i = 0; i < nameList.size(); i++) {
+                        String fieldName = nameList.get(i);
+                        if (fieldName.contains("*")) {
+                            fieldName = fieldName.replace("*", "");
+                        }
+                        Object value = map.get(fieldName);
+                        objs[i] = value;
+                        System.out.println("字段" + fieldName + "对应值: " + value);
+                    }
+                } else {
+                    // 如果是其他类型，直接作为第一列值
+                    System.out.println("未知数据类型: " + object.getClass().getName() + "，作为第一列值");
+                    objs[0] = object;
+                    System.out.println("第一列值: " + object);
+                }
+                
+                objects.add(objs);
+                System.out.println("第" + (idx + 1) + "条数据处理完成，objs: " + Arrays.toString(objs));
+            }
+        }
+        
+        System.out.println("处理后的数据行数: " + objects.size());
+        if (objects.size() > 0) {
+            System.out.println("第一行数据: " + Arrays.toString(objects.get(0)));
+        }
+        
+        // 如果没有数据，创建一个空的表头行
+        if (objects.size() == 0) {
+            System.out.println("没有数据，创建空的表头行");
+            Object[] emptyRow = new Object[names.length];
+            for (int i = 0; i < names.length; i++) {
+                emptyRow[i] = "";
+            }
+            objects.add(emptyRow);
+        }
+        
         File file = ExcelUtils.exportObjectsOneSheet(title, tip, names, title, objects);
+        System.out.println("Excel文件生成成功: " + file.getAbsolutePath());
+        
         ExcelUtils.downloadExcel(file, file.getName(), response);
+        System.out.println("Excel下载完成");
+        System.out.println("====================================");
     }
 }

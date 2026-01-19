@@ -151,28 +151,43 @@ public class FunctionController extends BaseController {
         try {
             Long roleId = 0L;
             String fc = "";
+            // 获取UserRole数据
             List<UserBusiness> roleList = userBusinessService.getBasicData(userId, "UserRole");
             if(roleList!=null && roleList.size()>0){
-                String value = roleList.get(0).getValue();
-                if(StringUtil.isNotEmpty(value)){
-                    String roleIdStr = value.replace("[", "").replace("]", "");
-                    roleId = Long.parseLong(roleIdStr);
+                UserBusiness userBusiness = roleList.get(0);
+                if(userBusiness != null) {
+                    String value = userBusiness.getValue();
+                    if(StringUtil.isNotEmpty(value)){
+                        String roleIdStr = value.replace("[", "").replace("]", "");
+                        // 安全地转换为Long类型
+                        try {
+                            roleId = Long.parseLong(roleIdStr);
+                        } catch (NumberFormatException e) {
+                            logger.error("无效的角色ID格式: {}", roleIdStr, e);
+                            roleId = 0L;
+                        }
+                    }
                 }
             }
             //当前用户所拥有的功能列表，格式如：[1][2][5]
-            List<UserBusiness> funList = userBusinessService.getBasicData(roleId.toString(), "RoleFunctions");
-            if(funList!=null && funList.size()>0){
-                fc = funList.get(0).getValue();
+            if(roleId > 0) {
+                List<UserBusiness> funList = userBusinessService.getBasicData(roleId.toString(), "RoleFunctions");
+                if(funList!=null && funList.size()>0){
+                    UserBusiness userBusiness = funList.get(0);
+                    if(userBusiness != null) {
+                        fc = userBusiness.getValue();
+                    }
+                }
             }
             //获取系统配置信息-是否开启多级审核
             String approvalFlag = "0";
             List<SystemConfig> list = systemConfigService.getSystemConfig();
-            if(list.size()>0) {
+            if(list != null && list.size()>0) {
                 approvalFlag = list.get(0).getMultiLevelApprovalFlag();
             }
 
             List<Function> dataList = functionService.getRoleFunction(pNumber);
-            if (dataList.size() != 0) {
+            if (dataList != null && dataList.size() != 0) {
                 User userInfo = userService.getCurrentUser();
                 //获取当前用户所属的租户所拥有的功能id的map
                 Map<Long, Long> funIdMap = functionService.getCurrentTenantFunIdMap();
@@ -188,6 +203,8 @@ public class FunctionController extends BaseController {
             }
         } catch (DataAccessException e) {
             logger.error(">>>>>>>>>>>>>>>>>>>查找异常", e);
+        } catch (Exception e) {
+            logger.error(">>>>>>>>>>>>>>>>>>>菜单生成异常", e);
         }
         return dataArray;
     }
@@ -215,7 +232,8 @@ public class FunctionController extends BaseController {
                         dataArray.add(item);
                     }
                 } else {
-                    if (fc.indexOf("[" + function.getId().toString() + "]") != -1) {
+                    // 检查fc是否为空，避免空指针异常
+                    if (StringUtil.isNotEmpty(fc) && fc.indexOf("[" + function.getId().toString() + "]") != -1) {
                         dataArray.add(item);
                     }
                 }

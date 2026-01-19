@@ -62,7 +62,8 @@ public interface DepotHeadMapperEx {
             @Param("column") String column,
             @Param("order") String order,
             @Param("offset") Integer offset,
-            @Param("rows") Integer rows);
+            @Param("rows") Integer rows,
+            @Param("tenantId") Long tenantId);
 
     int findInOutDetailCount(
             @Param("beginTime") String beginTime,
@@ -78,7 +79,8 @@ public interface DepotHeadMapperEx {
             @Param("oId") Integer oId,
             @Param("number") String number,
             @Param("creator") Long creator,
-            @Param("remark") String remark);
+            @Param("remark") String remark,
+            @Param("tenantId") Long tenantId);
 
     List<DepotHeadVo4InDetail> findInOutDetailStatistic(
             @Param("beginTime") String beginTime,
@@ -94,7 +96,8 @@ public interface DepotHeadMapperEx {
             @Param("oId") Integer oId,
             @Param("number") String number,
             @Param("creator") Long creator,
-            @Param("remark") String remark);
+            @Param("remark") String remark,
+            @Param("tenantId") Long tenantId);
 
     List<DepotHeadVo4InOutMCount> findInOutMaterialCount(
             @Param("beginTime") String beginTime,
@@ -154,7 +157,8 @@ public interface DepotHeadMapperEx {
             @Param("column") String column,
             @Param("order") String order,
             @Param("offset") Integer offset,
-            @Param("rows") Integer rows);
+            @Param("rows") Integer rows,
+            @Param("tenantId") Long tenantId);
 
     int findAllocationDetailCount(
             @Param("beginTime") String beginTime,
@@ -167,7 +171,8 @@ public interface DepotHeadMapperEx {
             @Param("materialParam") String materialParam,
             @Param("depotList") List<Long> depotList,
             @Param("depotFList") List<Long> depotFList,
-            @Param("remark") String remark);
+            @Param("remark") String remark,
+            @Param("tenantId") Long tenantId);
 
     List<DepotHeadVo4InDetail> findAllocationStatistic(
             @Param("beginTime") String beginTime,
@@ -180,7 +185,8 @@ public interface DepotHeadMapperEx {
             @Param("materialParam") String materialParam,
             @Param("depotList") List<Long> depotList,
             @Param("depotFList") List<Long> depotFList,
-            @Param("remark") String remark);
+            @Param("remark") String remark,
+            @Param("tenantId") Long tenantId);
 
     List<DepotHeadVo4StatementAccount> getStatementAccount(
             @Param("beginTime") String beginTime,
@@ -195,7 +201,8 @@ public interface DepotHeadMapperEx {
             @Param("subTypeBack") String subTypeBack,
             @Param("billType") String billType,
             @Param("offset") Integer offset,
-            @Param("rows") Integer rows);
+            @Param("rows") Integer rows,
+            @Param("tenantId") Long tenantId);
 
     int getStatementAccountCount(
             @Param("beginTime") String beginTime,
@@ -208,7 +215,8 @@ public interface DepotHeadMapperEx {
             @Param("subType") String subType,
             @Param("typeBack") String typeBack,
             @Param("subTypeBack") String subTypeBack,
-            @Param("billType") String billType);
+            @Param("billType") String billType,
+            @Param("tenantId") Long tenantId);
 
     List<DepotHeadVo4StatementAccount> getStatementAccountTotalPay(
             @Param("beginTime") String beginTime,
@@ -221,7 +229,8 @@ public interface DepotHeadMapperEx {
             @Param("subType") String subType,
             @Param("typeBack") String typeBack,
             @Param("subTypeBack") String subTypeBack,
-            @Param("billType") String billType);
+            @Param("billType") String billType,
+            @Param("tenantId") Long tenantId);
 
     List<DepotHeadVo4List> getDetailByNumber(
             @Param("number") String number);
@@ -250,7 +259,8 @@ public interface DepotHeadMapperEx {
             @Param("materialParam") String materialParam,
             @Param("depotArray") String[] depotArray,
             @Param("offset") Integer offset,
-            @Param("rows") Integer rows);
+            @Param("rows") Integer rows,
+            @Param("tenantId") Long tenantId);
 
     int debtListCount(
             @Param("organId") Long organId,
@@ -260,7 +270,8 @@ public interface DepotHeadMapperEx {
             @Param("beginTime") String beginTime,
             @Param("endTime") String endTime,
             @Param("materialParam") String materialParam,
-            @Param("depotArray") String[] depotArray);
+            @Param("depotArray") String[] depotArray,
+            @Param("tenantId") Long tenantId);
 
     List<FinishDepositVo> getFinishDepositByNumberList(
             @Param("numberList") List<String> numberList);

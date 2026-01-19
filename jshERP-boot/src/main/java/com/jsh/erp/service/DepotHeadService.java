@@ -768,8 +768,12 @@ public class DepotHeadService {
                                                       Long creator, String remark, String column, String order, Integer offset, Integer rows) throws Exception{
         List<DepotHeadVo4InDetail> list = null;
         try{
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             list =depotHeadMapperEx.findInOutDetail(beginTime, endTime, type, creatorArray, organArray, categoryList, forceFlag, inOutManageFlag,
-                    materialParam, depotList, oId, number, creator, remark, column, order, offset, rows);
+                    materialParam, depotList, oId, number, creator, remark, column, order, offset, rows, tenantId);
         }catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -781,8 +785,12 @@ public class DepotHeadService {
                                     Long creator, String remark) throws Exception{
         int result = 0;
         try{
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             result =depotHeadMapperEx.findInOutDetailCount(beginTime, endTime, type, creatorArray, organArray, categoryList, forceFlag, inOutManageFlag,
-                    materialParam, depotList, oId, number, creator, remark);
+                    materialParam, depotList, oId, number, creator, remark, tenantId);
         }catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -795,8 +803,12 @@ public class DepotHeadService {
                                                       Long creator, String remark) throws Exception{
         DepotHeadVo4InDetail item = new DepotHeadVo4InDetail();
         try{
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             List<DepotHeadVo4InDetail> list =depotHeadMapperEx.findInOutDetailStatistic(beginTime, endTime, type, creatorArray, organArray, categoryList, forceFlag, inOutManageFlag,
-                    materialParam, depotList, oId, number, creator, remark);
+                    materialParam, depotList, oId, number, creator, remark, tenantId);
             if(list.size()>0) {
                 item.setOperNumber(list.get(0).getOperNumber());
                 item.setAllPrice(list.get(0).getAllPrice());
@@ -874,8 +886,12 @@ public class DepotHeadService {
                             String remark, String column, String order, Integer offset, Integer rows) throws Exception{
         List<DepotHeadVo4InDetail> list = null;
         try{
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             list =depotHeadMapperEx.findAllocationDetail(beginTime, endTime, subType, number, creatorArray, categoryList, forceFlag,
-                    materialParam, depotList, depotFList, remark, column, order, offset, rows);
+                    materialParam, depotList, depotFList, remark, column, order, offset, rows, tenantId);
         }catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -887,8 +903,12 @@ public class DepotHeadService {
                             String remark) throws Exception{
         int result = 0;
         try{
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             result =depotHeadMapperEx.findAllocationDetailCount(beginTime, endTime, subType, number, creatorArray, categoryList, forceFlag,
-                    materialParam, depotList, depotFList, remark);
+                    materialParam, depotList, depotFList, remark, tenantId);
         }catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -900,8 +920,12 @@ public class DepotHeadService {
                                                         String remark) throws Exception{
         DepotHeadVo4InDetail item = new DepotHeadVo4InDetail();
         try{
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             List<DepotHeadVo4InDetail> list =depotHeadMapperEx.findAllocationStatistic(beginTime, endTime, subType, number, creatorArray, categoryList, forceFlag,
-                    materialParam, depotList, depotFList, remark);
+                    materialParam, depotList, depotFList, remark, tenantId);
             if(list.size()>0) {
                 item.setOperNumber(list.get(0).getOperNumber());
                 item.setAllPrice(list.get(0).getAllPrice());
@@ -917,7 +941,11 @@ public class DepotHeadService {
                                                                   String subTypeBack, String billType, Integer offset, Integer rows) {
         List<DepotHeadVo4StatementAccount> list = null;
         try{
-            list = depotHeadMapperEx.getStatementAccount(beginTime, endTime, organId, organArray, hasDebt, supplierType, type, subType,typeBack, subTypeBack, billType, offset, rows);
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
+            list = depotHeadMapperEx.getStatementAccount(beginTime, endTime, organId, organArray, hasDebt, supplierType, type, subType,typeBack, subTypeBack, billType, offset, rows, tenantId);
         } catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -928,7 +956,11 @@ public class DepotHeadService {
                                         Integer hasDebt, String supplierType, String type, String subType, String typeBack, String subTypeBack, String billType) {
         int result = 0;
         try{
-            result = depotHeadMapperEx.getStatementAccountCount(beginTime, endTime, organId, organArray, hasDebt, supplierType, type, subType,typeBack, subTypeBack, billType);
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
+            result = depotHeadMapperEx.getStatementAccountCount(beginTime, endTime, organId, organArray, hasDebt, supplierType, type, subType,typeBack, subTypeBack, billType, tenantId);
         } catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -940,7 +972,11 @@ public class DepotHeadService {
                                                                           String typeBack, String subTypeBack, String billType) {
         List<DepotHeadVo4StatementAccount> list = null;
         try{
-            list = depotHeadMapperEx.getStatementAccountTotalPay(beginTime, endTime, organId, organArray, hasDebt, supplierType, type, subType,typeBack, subTypeBack, billType);
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
+            list = depotHeadMapperEx.getStatementAccountTotalPay(beginTime, endTime, organId, organArray, hasDebt, supplierType, type, subType,typeBack, subTypeBack, billType, tenantId);
         } catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -1449,13 +1485,17 @@ public class DepotHeadService {
                                            String status, Integer offset, Integer rows) {
         List<DepotHeadVo4List> resList = new ArrayList<>();
         try{
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             String depotIds = depotService.findDepotStrByCurrentUser();
             String [] depotArray=depotIds.split(",");
             String [] creatorArray = getCreatorArray();
             beginTime = Tools.parseDayToTime(beginTime,BusinessConstants.DAY_FIRST_TIME);
             endTime = Tools.parseDayToTime(endTime,BusinessConstants.DAY_LAST_TIME);
             List<DepotHeadVo4List> list=depotHeadMapperEx.debtList(organId, creatorArray, status, number,
-                    beginTime, endTime, materialParam, depotArray, offset, rows);
+                    beginTime, endTime, materialParam, depotArray, offset, rows, tenantId);
             if (null != list) {
                 resList = parseDebtBillList(list);
             }
@@ -1469,13 +1509,17 @@ public class DepotHeadService {
                              String status) {
         int total = 0;
         try {
+            HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+            Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             String depotIds = depotService.findDepotStrByCurrentUser();
             String[] depotArray = depotIds.split(",");
             String[] creatorArray = getCreatorArray();
             beginTime = Tools.parseDayToTime(beginTime, BusinessConstants.DAY_FIRST_TIME);
             endTime = Tools.parseDayToTime(endTime, BusinessConstants.DAY_LAST_TIME);
             total = depotHeadMapperEx.debtListCount(organId, creatorArray, status, number,
-                    beginTime, endTime, materialParam, depotArray);
+                    beginTime, endTime, materialParam, depotArray, tenantId);
         } catch(Exception e){
             JshException.readFail(logger, e);
         }
@@ -1487,6 +1531,8 @@ public class DepotHeadService {
                            HttpServletRequest request, HttpServletResponse response) {
         try {
             Long userId = userService.getUserId(request);
+            User user = userService.getUser(userId);
+            Long tenantId = user.getTenantId();
             String priceLimit = userService.getRoleTypeByUserId(userId).getPriceLimit();
             String billCategory = getBillCategory(subType);
             String depotIds = depotService.findDepotStrByCurrentUser();
@@ -1497,13 +1543,18 @@ public class DepotHeadService {
             endTime = Tools.parseDayToTime(endTime, BusinessConstants.DAY_LAST_TIME);
             List<DepotHeadVo4List> dhList = new ArrayList<>();
             List<DepotHeadVo4List> list = depotHeadMapperEx.debtList(organId, creatorArray, status, number,
-                    beginTime, endTime, materialParam, depotArray, null, null);
+                    beginTime, endTime, materialParam, depotArray, null, null, tenantId);
             if (null != list) {
                 dhList = parseDebtBillList(list);
             }
             //生成Excel文件
             String fileName = "单据信息";
-            File file = new File("/opt/"+ fileName);
+            // 使用项目根目录下的temp目录来生成Excel文件，确保有写入权限
+            File tempDir = new File(System.getProperty("user.dir") + File.separator + "temp");
+            if (!tempDir.exists()) {
+                tempDir.mkdirs();
+            }
+            File file = new File(tempDir, fileName);
             WritableWorkbook wtwb = Workbook.createWorkbook(file);
             String oneTip = "";
             String sheetOneStr = "";
