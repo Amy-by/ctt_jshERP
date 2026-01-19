@@ -212,8 +212,34 @@ public class FunctionController extends BaseController {
     public JSONArray getMenuByFunction(List<Function> dataList, String fc, String approvalFlag, Map<Long, Long> funIdMap, User userInfo) throws Exception {
         JSONArray dataArray = new JSONArray();
         for (Function function : dataList) {
+            // 系统管理模块特殊处理：只有系统管理员可以访问
+            if("系统管理".equals(function.getName())) {
+                if("admin".equals(userInfo.getLoginName())) {
+                    // 只有admin用户可以看到系统管理模块
+                    JSONObject item = new JSONObject();
+                    List<Function> newList = functionService.getRoleFunction(function.getNumber());
+                    item.put("id", function.getId());
+                    item.put("text", function.getName());
+                    item.put("icon", function.getIcon());
+                    item.put("url", function.getUrl());
+                    item.put("component", function.getComponent());
+                    if (newList.size()>0) {
+                        JSONArray childrenArr = getMenuByFunction(newList, fc, approvalFlag, funIdMap, userInfo);
+                        if(childrenArr.size()>0) {
+                            item.put("children", childrenArr);
+                            dataArray.add(item);
+                        }
+                    } else {
+                        dataArray.add(item);
+                    }
+                }
+                continue;
+            }
+            
             //如果不是超管也不是租户就需要校验，防止分配下级用户的功能权限，大于租户的权限
-            if("admin".equals(userInfo.getLoginName()) || userInfo.getId().equals(userInfo.getTenantId()) || funIdMap.get(function.getId())!=null) {
+            if(("admin".equals(userInfo.getLoginName()) || userInfo.getId().equals(userInfo.getTenantId()) || funIdMap.get(function.getId())!=null) &&
+               ("admin".equals(userInfo.getLoginName()) || 
+                (StringUtil.isNotEmpty(fc) && fc.indexOf("[" + function.getId().toString() + "]") != -1))) {
                 //如果关闭多级审核，遇到任务审核菜单直接跳过
                 if("0".equals(approvalFlag) && "/workflow".equals(function.getUrl())) {
                     continue;
@@ -227,13 +253,17 @@ public class FunctionController extends BaseController {
                 item.put("component", function.getComponent());
                 if (newList.size()>0) {
                     JSONArray childrenArr = getMenuByFunction(newList, fc, approvalFlag, funIdMap, userInfo);
-                    if(childrenArr.size()>0) {
+                    // 检查父功能项是否有权限
+                    boolean hasParentPermission = "admin".equals(userInfo.getLoginName()) || 
+                                                (StringUtil.isNotEmpty(fc) && fc.indexOf("[" + function.getId().toString() + "]") != -1);
+                    if(childrenArr.size()>0 && hasParentPermission) {
                         item.put("children", childrenArr);
                         dataArray.add(item);
                     }
                 } else {
                     // 检查fc是否为空，避免空指针异常
-                    if (StringUtil.isNotEmpty(fc) && fc.indexOf("[" + function.getId().toString() + "]") != -1) {
+                    if ("admin".equals(userInfo.getLoginName()) || 
+                        (StringUtil.isNotEmpty(fc) && fc.indexOf("[" + function.getId().toString() + "]") != -1)) {
                         dataArray.add(item);
                     }
                 }
