@@ -4,6 +4,7 @@ import org.apache.catalina.Context;
 import org.apache.catalina.connector.Connector;
 import org.apache.tomcat.util.descriptor.web.SecurityCollection;
 import org.apache.tomcat.util.descriptor.web.SecurityConstraint;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.embedded.tomcat.TomcatServletWebServerFactory;
 import org.springframework.boot.web.servlet.server.ServletWebServerFactory;
 import org.springframework.context.annotation.Bean;
@@ -16,6 +17,9 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 public class HttpsConfig {
 
+    @Value("${server.http.port:9090}")
+    private int httpPort;
+    
     /**
      * 配置Tomcat，添加HTTP连接器并设置重定向到HTTPS
      * @return ServletWebServerFactory
@@ -34,7 +38,7 @@ public class HttpsConfig {
             }
         };
         
-        // 添加HTTP连接器，端口8080
+        // 添加HTTP连接器，端口从配置文件读取
         tomcat.addAdditionalTomcatConnectors(httpConnector());
         
         return tomcat;
@@ -47,8 +51,8 @@ public class HttpsConfig {
     private Connector httpConnector() {
         Connector connector = new Connector(TomcatServletWebServerFactory.DEFAULT_PROTOCOL);
         connector.setScheme("http");
-        // HTTP端口
-        connector.setPort(8080);
+        // HTTP端口，从配置文件读取
+        connector.setPort(httpPort);
         // HTTPS端口
         connector.setSecure(false);
         // 将HTTP请求重定向到HTTPS
