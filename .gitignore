@@ -25,3 +25,7 @@ test_login.js
 security_report.md
 
 todo
+
+# Systemd service files
+jsherp-backend.service
+jsherp-frontend.service
